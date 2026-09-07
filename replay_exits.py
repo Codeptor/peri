@@ -22,6 +22,8 @@ from peri.replay import CandleCache, format_report, load_trades, run
 
 # The questions this was built to answer, all on the exit side. The baseline
 # MUST be first: every verdict is measured against it.
+FETCH_GAP_SECS = 2.0
+
 VARIANTS = [
     ("baseline (config.toml)", {}),
     ("old geometry (pre-09-07)", dict(trail_start_r=0.5, trail_atr_mult=1.0,
@@ -56,10 +58,23 @@ def main() -> int:
     market = Market(http_post(cfg.hl_network), cfg.universe.dexes)
     horizon_ms = int(a.max_hold_hours * 3600 * 1000)
 
+    fetched_windows: set = set()
+
     def candles_for(trade):
         start = int(trade.opened_ts * 1000)
-        end = start + horizon_ms
-        if not cache.covered(trade.market, "1m", start, end):
+        # Clamp to now. A trade opened yesterday has a horizon that ends in the
+        # FUTURE, and the venue has no candles there, so `covered` could never
+        # be satisfied and every variant re-fetched the same tape -- which is
+        # what rate-limited the first real run into uselessness.
+        end = min(start + horizon_ms, int(time.time() * 1000))
+        window = (trade.market, start, end)
+        if window not in fetched_windows and not cache.covered(
+                trade.market, "1m", start, end):
+            fetched_windows.add(window)
+            # 7 days of 1m is 10,080 bars = 3 chunked calls, and a 27-trade
+            # replay is ~60 of those. Paced, because an unpaced run exhausted
+            # the venue's per-IP quota and returned 429 for everything.
+            time.sleep(FETCH_GAP_SECS)
             try:
                 # an EXPLICIT window: these trades are historical, and
                 # Market.candles always reads backwards from now
