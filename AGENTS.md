@@ -89,8 +89,31 @@ behind `venue = "lighter"` (HL stays the default). One Python daemon, one brain:
   and `ZERO` (Lighter standard tier, no maker/taker fee). `Guard` and `Engine`
   take one and default to HL, so a zero-fee venue prices at zero with no
   special case at any call site.
-- **The engine manages positions without the LLM**: breakeven at +1R (stop →
-  entry + round-trip fees) and a time stop at 3h below +0.5R.
+- **The engine manages positions without the LLM**, and the analyst is TOLD so
+  (it was not, and was designing 2.5R structures against rails that forbade
+  them). At +1R: half the position banks at a resting venue tranche
+  (`scale_out_at_r`/`scale_out_frac`) and the stop starts trailing the
+  high-water mark, giving back at most `trail_giveback_r` (0.5) of the risk
+  taken and never less than `trail_atr_mult` × ATR15m. Breakeven (entry +
+  round-trip fees) is the fallback when no band can be computed. A time stop
+  closes anything under +0.5R at 3h — unless it has already banked a tranche,
+  which is not dead money. **The band is expressed in R for a reason**: the
+  first version used a raw 1×ATR band armed at +0.5R, but the stop is never
+  tighter than 4×ATR, so reaching +0.5R moved the stop from −4 ATR to +1 ATR in
+  one step and cut winners at +0.25R while every loser paid −1R. One take-profit
+  in 27 trades was that arithmetic. Whether the wider band is a net win is a
+  question about the distribution of MFE — see `replay_exits.py`.
+- **Closes record HOW they happened.** `close_reason` says which bracket filled;
+  `exit_kind` says why it sat there (initial_stop / breakeven_stop / trail_stop
+  / tp / time_stop / analyst / external). They were merged, so the measured
+  record could show "my stops keep getting hit" but never "I keep being trailed
+  out of winners". MAE/MFE in R are tracked for every open position on every
+  management pass (`peak_px` is trail machinery and only moves past
+  `trail_start_r`), and the digest buckets by exit kind, conviction, wake
+  trigger and volatility — conviction and ATR were already being SELECTed and
+  discarded. Lessons may not restate statistics: the corpus held six stale
+  versions of the long/short split against a measured 56%/39%, all replayed
+  each cycle as fact.
 - **Wakes are price-driven**, not just scheduled: `pricewatch.py` polls marks
   every 30s and wakes the analyst on a 1.0%/5m move, or a 24h breakout that
   CLEARS the level by `breakout_pct` (0.15%). Without that margin a market
@@ -150,7 +173,10 @@ src/peri/          the daemon (hatchling package, src layout)
   analyst.py       the ONE brain: prompt builder + OpenAI-compatible call,
                    strict JSON → pydantic, 2 retries then loud AnalystError
   market.py        dex-aware HL info layer: merged native+xyz meta/ctxs/candles,
-                   candle features, candidate screening
+                   15m/1h/1d features (multi-day structure, ATR per timeframe,
+                   rvol, premium vs oracle, impact spread), candidate screening
+  replay.py        re-score RECORDED trades under different exit parameters;
+                   imports the exit geometry from risk.py, never reimplements it
   risk.py          the guard: frozen gates + stop-distance sizing
   models.py        Decision schema (OpenAction/CloseAction/AdjustStopAction)
   state.py         SQLite ledger (peri.db): positions, decisions, refusals,
@@ -177,7 +203,7 @@ src/peri/          the daemon (hatchling package, src layout)
   pricewatch.py    cheap mark poller -> price-triggered analyst wakes
   notifier.py      stdout + optional Telegram bot alerts (UTC+IST stamps)
   config.py        config.toml + .env (.env file wins over stale shell env)
-tests/             pytest suite (483 tests, no network — Trench/HL/Lighter fetchers are
+tests/             pytest suite (553 tests, no network — Trench/HL/Lighter fetchers are
                    injected on the Engine so the suite stays offline; fixtures/messages.py has
                    synthetic message-shape fixtures)
 config.toml        runtime config (mode, universe, risk knobs, analyst, news)
@@ -188,7 +214,9 @@ Root scripts       hl_smoke.py (TESTNET live-adapter smoke, hard-refuses mainnet
                    (interactive TG login), manual_trade.py (one operator-authorized
                    bracketed order, no gates), manage_trade.py (replace protection:
                    full-size stop + split TP tranches), backfill_entry_fees.py,
-                   wire_telegram.py (discover the operator chat id for alerts)
+                   wire_telegram.py (discover the operator chat id for alerts),
+                   replay_exits.py (re-score the real trades under different exit
+                   parameters — exits only, with a 2sd noise bar on every verdict)
 docs/superpowers/  STATUS.md (living truth) + specs/ + plans/ + the manual
                    trading runbook + dated handoffs
 docs/memory/       what the bot learned, exported from a live ledger: its own
@@ -204,7 +232,7 @@ archive/           RETIRED systems, kept for reference: kestreld (Rust paper
 ## Build and test
 
 ```bash
-uv run --group dev pytest -q               # 483 tests, must stay green
+uv run --group dev pytest -q               # 553 tests, must stay green
 uv run --group dev ruff check src tests    # lint (line-length 110)
 uv run peri --once                         # one real decision cycle (dry: paper)
 uv run peri                                # the daemon (telegram feed + loop)
@@ -227,7 +255,8 @@ a claimed pass without rerunning it.
   volume floor/movers, `[risk]` all knobs (risk_pct 5.0, max_concurrent 3,
   max_leverage 20, RR ≥ 2, 45m blackout before a high-impact print,
   kill 15%, day-loss halt 6%, cap 3/day, min stop 2% & 4×ATR, range-edge
-  0.20/0.80, 30m equity open/close blackout, breakeven 1R, 3h time stop,
+  0.20/0.80, 30m equity open/close blackout, breakeven 1R, trail from 1R with a
+  0.5R giveback, scale-out of 50% at 1R, 3h time stop,
   asymmetric cooldowns 1h/4h, min notional $10, 0.5% max mark drift between
   deciding and acting), `[news]` RSS list, `[watch]`
   price-wake poller, `[notify]` chat id.
