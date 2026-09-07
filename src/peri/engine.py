@@ -25,8 +25,9 @@ from peri.models import (Action, AdjustStopAction, CloseAction, OpenAction,
                          RememberAction, restates_a_statistic)
 from peri.notifier import Notifier, fmt_close, fmt_open, fmt_refusal
 from peri.fees import HL_SCHEDULE, FeeSchedule
-from peri.risk import (Approved, Guard, Refusal, ScaleOut, isolated_liq_distance,
-                       plan_scale_out, range_position)
+from peri.risk import (Approved, Guard, Refusal, ScaleOut, breakeven_px,
+                       isolated_liq_distance, plan_scale_out, range_position,
+                       trail_target)
 from peri.router import Adapter, bracket_hit, realized_pnl
 from peri.state import Position, State, dumps_actions
 from pydantic import TypeAdapter
@@ -3059,19 +3060,14 @@ class Engine:
             # something different on every market.
             if cfg.trail_start_r > 0 and r >= cfg.trail_start_r:
                 peak = self.state.update_peak(pos.id, mark)
-                band = 0.0
                 stop_dist = self._position_risk_dist(pos)
-                if cfg.trail_giveback_r > 0 and stop_dist:
-                    band = cfg.trail_giveback_r * stop_dist
                 atr_pct = self._position_atr_pct(pos)
-                if atr_pct:
-                    # the trail must clear this market's own noise, or it is a
-                    # coin-flip exit dressed up as risk management
-                    band = max(band, peak * (atr_pct / 100.0) * cfg.trail_atr_mult)
-                if band > 0:
-                    trailed = peak - band if pos.side == "long" else peak + band
+                trailed = trail_target(
+                    pos.side, peak, stop_dist, atr_pct,
+                    giveback_r=cfg.trail_giveback_r, atr_mult=cfg.trail_atr_mult)
+                if trailed is not None:
                     target = format_price(trailed, mi.sz_decimals)
-                    how = (f"trailing {band:g} behind {peak:g} "
+                    how = (f"trailing {abs(peak - trailed):g} behind {peak:g} "
                            f"({cfg.trail_giveback_r:g}R giveback, "
                            f"{cfg.trail_atr_mult:g}xATR floor)")
                 else:
@@ -3086,10 +3082,12 @@ class Engine:
             if target is None:
                 if cfg.breakeven_at_r <= 0 or r < cfg.breakeven_at_r:
                     continue
-                buffer = 1 + 2 * self.fees.taker_rate
-                target = (pos.entry_px * buffer if pos.side == "long"
-                          else pos.entry_px / buffer)
-                target = format_price(target, mi.sz_decimals)
+                # the VENUE's taker rate, not HL's constant: on a zero-fee
+                # venue breakeven is the entry, not the entry plus a fee that
+                # was never charged.
+                target = format_price(
+                    breakeven_px(pos.side, pos.entry_px, self.fees.taker_rate),
+                    mi.sz_decimals)
                 how = "breakeven (entry plus the round trip in fees)"
             better = (pos.stop_px is None
                       or (pos.side == "long" and target > pos.stop_px)
@@ -3334,9 +3332,7 @@ class Engine:
         # It moved, so it moved in our favour (both ratchets only ever improve
         # it). Breakeven parks at entry plus the round trip; anything further
         # is the trail following the high-water mark.
-        buffer = 1 + 2 * self.fees.taker_rate
-        be = (pos.entry_px * buffer if pos.side == "long"
-              else pos.entry_px / buffer)
+        be = breakeven_px(pos.side, pos.entry_px, self.fees.taker_rate)
         if abs(pos.stop_px - be) <= max(be, 1.0) * 1e-3:
             return "breakeven_stop"
         return "trail_stop"

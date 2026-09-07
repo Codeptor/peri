@@ -150,6 +150,43 @@ BOUNDARY_EPS = 1e-9
 LIQ_SAFETY = 1.3             # liquidation must sit this many stop-distances away
 
 
+def breakeven_px(side: str, entry_px: float, fee_rate: float) -> float:
+    """Entry plus the round trip, so a winner cannot become a loser."""
+    buffer = 1 + 2 * fee_rate
+    return entry_px * buffer if side == "long" else entry_px / buffer
+
+
+def trail_band(peak: float, stop_dist: Optional[float], atr_pct: Optional[float],
+               *, giveback_r: float, atr_mult: float) -> float:
+    """How far behind the high-water mark a trailing stop sits, in price.
+
+    A fraction of the RISK TAKEN, floored by the market's own noise. Expressed
+    in R because that is what the giveback means: the first version used a raw
+    1x-ATR band against a stop that is never tighter than 4x ATR, so reaching
+    +0.5R moved the stop from -4 ATR to +1 ATR in one step and cut winners at a
+    quarter of an R while losers paid the full one.
+
+    ONE definition, shared by the live engine and the replay harness — the two
+    must never be able to disagree about what the strategy does."""
+    band = 0.0
+    if giveback_r > 0 and stop_dist:
+        band = giveback_r * stop_dist
+    if atr_pct and atr_pct > 0:
+        band = max(band, peak * (atr_pct / 100.0) * atr_mult)
+    return band
+
+
+def trail_target(side: str, peak: float, stop_dist: Optional[float],
+                 atr_pct: Optional[float], *, giveback_r: float,
+                 atr_mult: float) -> Optional[float]:
+    """The trailing stop price, or None when no honest band can be computed."""
+    band = trail_band(peak, stop_dist, atr_pct,
+                      giveback_r=giveback_r, atr_mult=atr_mult)
+    if band <= 0:
+        return None
+    return peak - band if side == "long" else peak + band
+
+
 def range_position(features: Optional[dict], px: float,
                    resting: bool) -> Optional[float]:
     """Where `px` sits in the last 24h range: 0.0 at the low, 1.0 at the high.
