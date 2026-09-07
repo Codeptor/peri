@@ -103,6 +103,14 @@ trail_atr_mult = 1.0                # stop rides this many ATR15m behind the hig
                                     #   trail (0.77%) is wider than the whole move and would
                                     #   never lock anything in.
 entry_expiry_secs = 7200            # a resting maker entry that never fills is cancelled after 2h
+max_mark_drift_pct = 0.5            # refuse a MARKET entry whose mark moved more than
+                                    #   this while the analyst was deciding. The decision
+                                    #   takes 180-225s and the cycle is often triggered
+                                    #   BECAUSE the tape moved, so an entry priced at the
+                                    #   mark the analyst saw is a chase by the time it
+                                    #   lands. Same tolerance the chat confirmation path
+                                    #   has always used. Resting entries are exempt: their
+                                    #   level is explicit and re-gated against fresh marks.
 event_blackout_mins = 45            # no new entry within 45m of a HIGH-impact calendar
                                     #   event (NFP, CPI, FOMC). Opening into a scheduled
                                     #   shock is a coin flip; trade the reaction instead.

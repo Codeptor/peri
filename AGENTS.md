@@ -35,8 +35,27 @@ and the account is the owner's Trench wallet). One Python daemon, one brain:
   distance (`notional = equity × risk% / stop_dist`) **priced at the entry, not
   the mark** — and so is the range-edge test, so a resting order is judged where
   IT sits, not where the market is. Lots FLOOR to the venue step and the
-  invariants are re-asserted after rounding. **Zero fallbacks**: the range and
+  invariants are re-asserted after rounding, and the floored lot is what the
+  adapter sends — there is no second rounding site (an `Approved` that carries
+  no lot raises rather than re-deriving one). **Zero fallbacks**: the range and
   ATR gates REFUSE when their features are missing rather than skipping.
+- **Nothing is gated on a stale price.** The decision takes 180-225s and the
+  cycle is often woken *because* the tape moved, so between deciding and acting
+  the engine re-reads marks, account and open orders
+  (`Engine.refresh_execution_context`) and every rail is judged against those.
+  A MARKET entry whose mark drifted more than `risk.max_mark_drift_pct` (0.5%)
+  while the analyst was thinking is refused — priced at the old mark it is a
+  chase by the time it lands. A RESTING entry is exempt (its level is an
+  explicit price) but is still re-gated, so a limit that has ended up on the
+  wrong side of the mark is caught. Each executed action also updates the
+  reserved-market set and the account the NEXT one is judged against; reusing
+  one pre-decision snapshot let two opens in a single decision both see an
+  empty reserve and the same available margin.
+- **The daily cap counts orders on the book**, not only filled entries: a
+  resting order reserves its slot at placement and gives it back if it expires.
+  The kill switch and the day-loss halt both WITHDRAW resting entries, the way
+  operator pause always has — otherwise an order parked before the halt fills
+  straight through it.
 - **Entries can rest.** `OpenAction.entry` parks a maker limit at the analyst's
   level (below mark for longs, above for shorts) with SL+TP attached in ONE
   signed action (`bulk_orders(..., grouping="normalTpsl")`), so the brackets arm
@@ -51,7 +70,11 @@ and the account is the owner's Trench wallet). One Python daemon, one brain:
   maker 1.5bp, Trench builder 3bp on every order. `FEE_RATE` is 7.5bp/side
   (was 10.5, a 40% overstatement that refused trades clearing the TP floor), and
   HL reports `closedPnl` GROSS with the entry fee on the OPENING fill — so
-  `positions.entry_fee` is attributed from the real fill and subtracted at close.
+  `positions.entry_fee` is attributed from the real fill and subtracted at close,
+  **including on a round trip reconstructed between two reconciles**, which used
+  to be booked gross of what it cost to get in. The schedule has exactly ONE
+  definition, `peri/fees.py` (it had drifted into three copies: router's
+  constants, literals inlined in `risk.gate_open`, and `market.close_fee_rate`).
 - **The engine manages positions without the LLM**: breakeven at +1R (stop →
   entry + round-trip fees) and a time stop at 3h below +0.5R.
 - **Wakes are price-driven**, not just scheduled: `pricewatch.py` polls marks
@@ -123,6 +146,8 @@ src/peri/          the daemon (hatchling package, src layout)
   hl_client.py     SDK client construction (agent key, dex-aware on mainnet)
   hl_sizing.py     HL tick rules (≤5 sig figs, ≤6−szDecimals decimals)
   router.py        Adapter protocol + DryRunAdapter (paper fills)
+  fees.py          the fee schedule, ONE definition (imports nothing from peri,
+                   so risk/router/market can all depend on it)
   feed.py          telethon ingest: raw msgs stored, callers flagged, wake event;
                    attached images transcribed at ingest via vision.py
   vision.py        the eye: one bounded vision call turns a posted chart into
@@ -133,7 +158,7 @@ src/peri/          the daemon (hatchling package, src layout)
   pricewatch.py    cheap mark poller -> price-triggered analyst wakes
   notifier.py      stdout + optional Telegram bot alerts (UTC+IST stamps)
   config.py        config.toml + .env (.env file wins over stale shell env)
-tests/             pytest suite (364 tests, no network — Trench/HL fetchers are
+tests/             pytest suite (453 tests, no network — Trench/HL fetchers are
                    injected on the Engine so the suite stays offline; fixtures/messages.py has
                    synthetic message-shape fixtures)
 config.toml        runtime config (mode, universe, risk knobs, analyst, news)
@@ -160,7 +185,7 @@ archive/           RETIRED systems, kept for reference: kestreld (Rust paper
 ## Build and test
 
 ```bash
-uv run --group dev pytest -q               # 431 tests, must stay green
+uv run --group dev pytest -q               # 453 tests, must stay green
 uv run --group dev ruff check src tests    # lint (line-length 110)
 uv run peri --once                         # one real decision cycle (dry: paper)
 uv run peri                                # the daemon (telegram feed + loop)
@@ -184,7 +209,8 @@ a claimed pass without rerunning it.
   max_leverage 20, RR ≥ 2, 45m blackout before a high-impact print,
   kill 15%, day-loss halt 6%, cap 3/day, min stop 2% & 4×ATR, range-edge
   0.20/0.80, 30m equity open/close blackout, breakeven 1R, 3h time stop,
-  asymmetric cooldowns 1h/4h, min notional $10), `[news]` RSS list, `[watch]`
+  asymmetric cooldowns 1h/4h, min notional $10, 0.5% max mark drift between
+  deciding and acting), `[news]` RSS list, `[watch]`
   price-wake poller, `[notify]` chat id.
 - `.env` (gitignored, 0600; template in `.env.example`) — `TG_API_ID/HASH`,
   `TG_BOT_TOKEN`, `HL_ACCOUNT_ADDRESS` + `HL_AGENT_KEY` (agent key signs, cannot

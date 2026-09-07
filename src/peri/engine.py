@@ -51,6 +51,15 @@ class ProposalError(RuntimeError):
     pass
 
 
+def _running_loop():
+    """The event loop running on THIS thread, or None. Used to decide whether a
+    wake can touch the Event directly or must be marshalled onto the loop."""
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        return None
+
+
 def reserved_order_markets(orders: list[dict]) -> frozenset[str]:
     markets = set()
     for order in orders:
@@ -81,6 +90,9 @@ class Engine:
         self.notify = notifier
         self.wake = wake
         self._wake_trigger = "caller message"
+        self._wake_lock = threading.Lock()
+        self._day_halt_announced: dict[str, bool] = {}
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._venue_position_details: dict[str, dict] = {}
         self._venue_withdrawable_by_dex: dict[str, float] = {}
         self._account_snapshot: dict = {}
@@ -371,15 +383,30 @@ class Engine:
         return dict(self._bias_snapshot)
 
     def request_wake(self, trigger: str = "manual dashboard") -> bool:
-        """Queue one immediate cycle; return whether a wake was already pending."""
-        already_pending = self.wake.is_set()
-        if not already_pending:
-            self._wake_trigger = trigger
-        self.wake.set()
+        """Queue one immediate cycle; return whether a wake was already pending.
+
+        Callable from ANY thread. The price watcher and the telegram control
+        both poll inside `asyncio.to_thread`, so they reach this from a worker
+        thread — and `asyncio.Event.set()` is not thread-safe: it resolves the
+        waiter's future via `loop.call_soon` without waking the loop's selector,
+        so the wake was only noticed at the loop's next scheduled wakeup. That
+        silently defeated the entire point of price-triggered wakes, which exist
+        to decide at the START of a move.
+        """
+        with self._wake_lock:
+            already_pending = self.wake.is_set()
+            if not already_pending:
+                self._wake_trigger = trigger
+        loop = self._loop
+        if loop is not None and loop is not _running_loop():
+            loop.call_soon_threadsafe(self.wake.set)
+        else:
+            self.wake.set()
         return already_pending
 
     # -- async shell -------------------------------------------------------
     async def run(self) -> None:
+        self._loop = asyncio.get_running_loop()
         self.notify.send(f"peri up · mode={self.cfg.mode} · net={self.cfg.hl_network} "
                          f"· cycle={self.cfg.analyst.cycle_secs}s")
         await asyncio.to_thread(self.startup)
@@ -394,17 +421,24 @@ class Engine:
                 timeout = max(0.0, next_scheduled - monotonic())
                 try:
                     await asyncio.wait_for(self.wake.wait(), timeout=timeout)
-                    trigger = self._wake_trigger
-                    self._wake_trigger = "caller message"
-                    self.wake.clear()
+                    with self._wake_lock:
+                        trigger = self._wake_trigger
+                        self._wake_trigger = "caller message"
+                        self.wake.clear()
                 except asyncio.TimeoutError:
                     pass
-            if trigger in ("startup", "scheduled"):
-                next_scheduled = monotonic() + self.next_cycle_secs()
             try:
                 await asyncio.to_thread(self.cycle, trigger)
             except Exception as e:  # noqa: BLE001 — one bad cycle never kills the daemon
                 self.notify.send(f"cycle error ({trigger}): {e!r}")
+            # Schedule the NEXT cycle from the moment this one finished, whatever
+            # woke it. Computing it before the body meant a cycle slower than the
+            # cadence (routine at cycle_secs_active=300 against a 180-225s
+            # analyst) left next_scheduled already in the past, so timeout was 0
+            # and the daemon ran LLM decisions back to back with no idle gap.
+            # Deferring on wake-triggered cycles too stops a wake at t+299s from
+            # being followed by the scheduled cycle one second later.
+            next_scheduled = monotonic() + self.next_cycle_secs()
 
     def next_cycle_secs(self) -> int:
         """Adaptive cadence: a quiet tape does not need a decision every 15
@@ -449,6 +483,32 @@ class Engine:
                             origin="operator", decision_id=decision_id)
         return {"market": market, "reason": reason}
 
+    def cancel_resting_entries(self, why: str) -> list[str]:
+        """Withdraw every unfilled maker entry. Returns the markets cleared.
+
+        A resting order can sit for entry_expiry_secs (2h) and fill LONG after
+        the conditions that justified it stopped holding — after the kill switch
+        tripped, or after the day-loss halt engaged. The fill path adopts it
+        unconditionally, so the halt that is supposed to stop the bleeding did
+        not reach the orders already on the book. Operator pause has always
+        cleared them; the automatic halts must do the same.
+        """
+        cleared = []
+        for entry in self.state.resting_entries():
+            oid = self._order_number(entry.get("oid"))
+            try:
+                if oid is not None:
+                    with self._adapter_lock:
+                        self.adapter.cancel_orders(entry["market"], [int(oid)])
+                        self._clear_orphan_brackets(entry["market"])
+                self.state.settle_pending_entry(entry["id"], "cancelled")
+                cleared.append(entry["market"])
+            except Exception as exc:  # noqa: BLE001 — report, never silently leave it
+                self.notify.send(
+                    f"{why}: could not cancel resting entry on "
+                    f"{entry['market']}: {exc!r}")
+        return cleared
+
     def set_paused(self, paused: bool, who: str = "dashboard") -> dict:
         """Operator pause. Halts NEW entries (gate 2) and cancels anything
         resting; open positions keep their venue brackets and the analyst keeps
@@ -457,18 +517,7 @@ class Engine:
         self.state.set_paused(paused, who)
         cancelled = []
         if paused and not was:
-            for entry in self.state.resting_entries():
-                oid = self._order_number(entry.get("oid"))
-                try:
-                    if oid is not None:
-                        with self._adapter_lock:
-                            self.adapter.cancel_orders(entry["market"], [int(oid)])
-                            self._clear_orphan_brackets(entry["market"])
-                    self.state.settle_pending_entry(entry["id"], "cancelled")
-                    cancelled.append(entry["market"])
-                except Exception as exc:  # noqa: BLE001 — report, never silently leave it
-                    self.notify.send(
-                        f"pause: could not cancel resting entry on {entry['market']}: {exc!r}")
+            cancelled = self.cancel_resting_entries("pause")
         if paused != was:
             self.notify.send(
                 f"{'PAUSED' if paused else 'RESUMED'} by {who}"
@@ -696,8 +745,25 @@ class Engine:
 
         self._runtime_update(phase="executing")
         t0 = time.time()
+        decided_marks = marks
+        if any(isinstance(a, OpenAction) for a in d.actions):
+            # The analyst has been thinking for minutes. Nothing below may be
+            # gated against the marks it started from.
+            try:
+                marks, equity, reserved_markets = self.refresh_execution_context()
+            except Exception as e:  # noqa: BLE001 — fail closed, never act on stale prices
+                reason = f"execution context unavailable: {type(e).__name__}: {e}"
+                for action in d.actions:
+                    self.state.record_refusal(getattr(action, "market", None),
+                                              action.model_dump_json(), reason)
+                self.notify.send(f"execution context DOWN — actions skipped: {reason}")
+                timings["execute"] = round(time.time() - t0, 1)
+                return
         for action in d.actions:
             try:
+                if isinstance(action, OpenAction) and not self._entry_still_valid(
+                        action, decided_marks, marks):
+                    continue
                 self.execute(
                     action, marks, equity, day, reserved_markets,
                     origin="autonomous", decision_id=decision_id,
@@ -707,6 +773,17 @@ class Engine:
                                           action.model_dump_json(),
                                           f"execution error: {e!r}")
                 self.notify.send(f"execution error on {getattr(action, 'market', '?')}: {e!r}")
+            else:
+                # Each action changes the book the NEXT one is judged against.
+                # Reusing one pre-decision snapshot let two opens in the same
+                # decision both see an empty reserve and the same available
+                # margin, overrunning max_concurrent and double-committing margin.
+                if isinstance(action, OpenAction):
+                    reserved_markets = reserved_markets | {action.market}
+                    try:
+                        equity = float(self._validated_snapshot(marks)["equity"])
+                    except Exception as e:  # noqa: BLE001 — keep the last good equity
+                        self.notify.send(f"post-action account re-read failed: {e!r}")
         timings["execute"] = round(time.time() - t0, 1)
 
     @staticmethod
@@ -745,6 +822,87 @@ class Engine:
                 raise ContextError(f"unknown market {raw.removeprefix('$')!r}")
         return tuple(resolved)
 
+    def _entry_still_valid(self, action: OpenAction, decided: dict,
+                           fresh: dict) -> bool:
+        """Did the market run away while the analyst was thinking?
+
+        Re-gating against fresh marks already handles a RESTING entry: its level
+        is an explicit price, and the guard refuses a limit that has ended up on
+        the wrong side of the mark. A MARKET order is different — its entire
+        thesis was priced at the mark the analyst saw, and taking it minutes
+        later at a materially different price is precisely the chase the
+        range-edge rail exists to prevent. Refuse it and say why, so the
+        refusal reaches the next prompt instead of silently becoming a fill.
+        """
+        tolerance = self.cfg.risk.max_mark_drift_pct / 100.0
+        if action.entry is not None or tolerance <= 0:
+            return True
+        before, now = decided.get(action.market), fresh.get(action.market)
+        if not isinstance(before, (int, float)) or before <= 0:
+            return True
+        if not isinstance(now, (int, float)) or now <= 0:
+            self.refuse(action, f"no live mark for {action.market} at execution")
+            return False
+        drift = self._relative_change(now, before)
+        if drift <= tolerance:
+            return True
+        self.refuse(
+            action,
+            f"{action.market} moved {drift * 100:.2f}% ({before:g} -> {now:g}) while "
+            f"the decision was being made, past the {self.cfg.risk.max_mark_drift_pct:g}% "
+            "limit — a market order priced at the old mark is a chase by the time it "
+            "lands. Rest a limit at the level you actually want instead")
+        self.notify.send(
+            f"stale entry refused: {action.market} {action.side} moved "
+            f"{drift * 100:.2f}% during the decision")
+        return False
+
+    def _validated_snapshot(self, marks: dict) -> dict:
+        """Fetch, validate, and only then publish. Nothing downstream may
+        ever read a snapshot that failed its own checks."""
+        with self._adapter_lock:
+            snap = self.adapter.account_snapshot(marks)
+        if not isinstance(snap, dict):
+            raise ContextError(f"account snapshot is invalid: {snap!r}")
+        value = snap.get("equity")
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or value < 0):
+            raise ContextError(f"account equity is invalid: {value!r}")
+        for field in ("available_margin", "held_collateral", "total_margin_used",
+                      "spot_usdc_total"):
+            value = snap.get(field)
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not math.isfinite(value) or value < 0):
+                raise ContextError(f"account {field} is invalid: {value!r}")
+        if not isinstance(snap.get("abstraction"), str):
+            raise ContextError(
+                f"account abstraction is invalid: {snap.get('abstraction')!r}")
+        self._account_snapshot = snap
+        return snap
+
+    def refresh_execution_context(self) -> tuple[dict, float, frozenset[str]]:
+        """Re-read the venue between DECIDING and ACTING.
+
+        The analyst call takes 180-225s against a 420s deadline, and the cycle is
+        very often triggered BECAUSE a market just moved 1%. Executing against
+        the marks the bundle was built from meant every price-dependent rail —
+        range-edge, the resting-entry side check, stop-distance sizing, the
+        margin fit, the isolated liquidation band — judged a price minutes old.
+        A resting long placed under a stale mark can already sit ABOVE the live
+        one, filling as the taker chase the whole design exists to avoid.
+
+        The chat path has always revalidated like this before acting on a
+        proposal (`confirm_trade`); the autonomous path never did. This is the
+        cheap half of `context_snapshot` — marks, account, orders — with no
+        candles, news or Trench calls, so it costs a few HTTP requests.
+        """
+        ctxs = self.market.ctxs()
+        marks = {n: c.mark for n, c in ctxs.items()}
+        snap = self._validated_snapshot(marks)
+        with self._adapter_lock:
+            orders = self.adapter.open_orders_all()
+        return marks, float(snap["equity"]), reserved_order_markets(orders)
+
     def context_snapshot(self, trigger: str, *,
                          target_query: str = "",
                          timings: dict[str, float] | None = None) -> tuple[
@@ -771,27 +929,7 @@ class Engine:
         _phase("reconcile")
 
         def _snapshot() -> dict:
-            """Fetch, validate, and only then publish. Nothing downstream may
-            ever read a snapshot that failed its own checks."""
-            with self._adapter_lock:
-                snap = self.adapter.account_snapshot(marks)
-            if not isinstance(snap, dict):
-                raise ContextError(f"account snapshot is invalid: {snap!r}")
-            value = snap.get("equity")
-            if (isinstance(value, bool) or not isinstance(value, (int, float))
-                    or not math.isfinite(value) or value < 0):
-                raise ContextError(f"account equity is invalid: {value!r}")
-            for field in ("available_margin", "held_collateral", "total_margin_used",
-                          "spot_usdc_total"):
-                value = snap.get(field)
-                if (isinstance(value, bool) or not isinstance(value, (int, float))
-                        or not math.isfinite(value) or value < 0):
-                    raise ContextError(f"account {field} is invalid: {value!r}")
-            if not isinstance(snap.get("abstraction"), str):
-                raise ContextError(
-                    f"account abstraction is invalid: {snap.get('abstraction')!r}")
-            self._account_snapshot = snap
-            return snap
+            return self._validated_snapshot(marks)
 
         account_snapshot = _snapshot()
         # manage_positions sizes nothing, but it CAN close (the time stop), and
@@ -814,9 +952,23 @@ class Engine:
                 and day_open > 0
                 and equity <= day_open * (1 - self.cfg.risk.kill_switch_pct / 100)):
             self.state.trip_kill(day)
+            # Orders already on the book are entries too: left resting they fill
+            # straight through the halt that just tripped.
+            withdrawn = self.cancel_resting_entries("kill switch")
             self.notify.send(f"KILL SWITCH: equity ${equity:.2f} is "
                              f"{self.cfg.risk.kill_switch_pct:.0f}% below day open "
-                             f"${day_open:.2f} — entries halted until 00:00 UTC")
+                             f"${day_open:.2f} — entries halted until 00:00 UTC"
+                             + (f" · withdrew resting: {', '.join(withdrawn)}"
+                                if withdrawn else ""))
+        halt = self.cfg.risk.day_loss_halt_pct
+        if (halt > 0 and self._day_pnl_pct <= -halt
+                and not self._day_halt_announced.get(day)):
+            self._day_halt_announced = {day: True}
+            withdrawn = self.cancel_resting_entries("day-loss halt")
+            self.notify.send(
+                f"DAY-LOSS HALT: down {self._day_pnl_pct:.1f}% on the day, past the "
+                f"-{halt:.0f}% soft limit — no new entries"
+                + (f" · withdrew resting: {', '.join(withdrawn)}" if withdrawn else ""))
 
         try:
             with self._adapter_lock:
@@ -1736,7 +1888,7 @@ class Engine:
             size_usd_risk=preview["risk_usd"], leverage=preview["leverage"],
             margin=preview["required_margin"], margin_mode=preview["margin_mode"],
             stop_px=preview["stop_px"], tp_px=preview["tp_px"],
-            entry_px=preview["entry_px"], resting=True,
+            entry_px=preview["entry_px"], resting=True, size=preview["size"],
         )
         self.state.update_action_execution(
             execution_id, stage="entry_submitted", status="executing",
@@ -1835,6 +1987,13 @@ class Engine:
             margin_mode=preview["margin_mode"],
             stop_px=preview["stop_px"],
             tp_px=preview["tp_px"],
+            # The guard already floored this to the venue lot and re-judged every
+            # invariant against it. Omitting it here sent Approved.size=0.0 to the
+            # adapter, whose fallback re-derived the lot with round() — rounding UP
+            # past the approved risk budget on the path that takes most trades.
+            entry_px=preview["entry_px"],
+            resting=False,
+            size=preview["size"],
         )
         submitted_ts = time.time()
         self.state.update_action_execution(
@@ -2824,9 +2983,15 @@ class Engine:
             changed = True
             locked = ((target - pos.entry_px) if pos.side == "long"
                       else (pos.entry_px - target)) * pos.size
+            # `better` deliberately admits a position whose venue stop vanished
+            # (stop_px is None). Formatting it with :g raised TypeError here —
+            # OUTSIDE the try above — so the stop moved, then the exception
+            # propagated out of context_snapshot and the whole cycle was logged
+            # as "context DOWN" and skipped: no analyst, no time stop, nothing.
+            was = f"{pos.stop_px:g}" if pos.stop_px is not None else "none"
             self.notify.send(
                 f"{how}: {pos.market} {pos.side} at {r:+.2f}R — stop "
-                f"{pos.stop_px:g} -> {target:g}, ${locked:+.2f} locked in")
+                f"{was} -> {target:g}, ${locked:+.2f} locked in")
         return changed
 
     def _account_snapshot_equity(self) -> float:
@@ -3136,6 +3301,7 @@ class Engine:
 
         closes: dict[str, dict] = {}
         non_close_tids = []
+        unclaimed_open_fees: dict[str, list[tuple[str, float]]] = {}
         for tid, fill, opening in validated:
             if fill is None:
                 # what it cost to get IN belongs to the position, not to nothing:
@@ -3147,6 +3313,14 @@ class Engine:
                         # used to re-add the same fee on the next pass
                         self.state.attribute_entry_fee(pos.id, opening["fee"], tid)
                         continue
+                    # A round trip that opened AND closed between two reconciles
+                    # has both fills in THIS batch. Its opening fee has nowhere
+                    # to go yet, so hold it: the close loop below reconstructs
+                    # the position and claims it. Without this the reconstructed
+                    # trade was booked gross of what it cost to get in, which
+                    # inflated the measured record the analyst learns from.
+                    unclaimed_open_fees.setdefault(opening["coin"], []).append(
+                        (tid, opening["fee"]))
                     if (time.time() - opening["ts"] < ENTRY_FEE_GRACE_SECS
                           or self.state.resting_entry_for(opening["coin"]) is not None):
                         # the ledger row does not exist YET: a resting entry
@@ -3182,6 +3356,10 @@ class Engine:
                     for tid in c["tids"]:
                         self.state.mark_fill(tid)
                     continue
+                for open_tid, open_fee in unclaimed_open_fees.pop(coin, []):
+                    # what it cost to get in. HL reports closedPnl GROSS, so
+                    # without this the round trip reads better than it was.
+                    self.state.attribute_entry_fee(pos.id, open_fee, open_tid)
             entry_fee = self.state.entry_fee(pos.id)
             if c["sz"] < pos.size * 0.999:
                 share = min(1.0, c["sz"] / pos.size) if pos.size > 0 else 0.0

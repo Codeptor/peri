@@ -398,6 +398,36 @@ def test_open_action_executes_and_records(tmp_path):
     assert {c["name"] for c in b["candidates"]} >= {"BTC", "SOL"}
 
 
+def test_market_entry_sends_the_guard_floored_lot_not_a_re_derived_one(tmp_path):
+    """The market-order path used to build Approved() without a size, so the
+    adapter fell back to round(notional / mark) — round-half-UP against the mark
+    instead of the guard's floor against the entry. That could send more risk
+    than was ever approved, on the path that takes most of peri's trades.
+    """
+    eng, state, _, _ = mk(tmp_path, [OPEN_SOL])
+    seen = {}
+    original = eng.adapter.open
+
+    def capture(ap, mark):
+        seen["size"] = ap.size
+        seen["entry_px"] = ap.entry_px
+        seen["resting"] = ap.resting
+        return original(ap, mark)
+
+    eng.adapter.open = capture
+    eng.cycle("scheduled")
+
+    pos = state.open_position_for("SOL")
+    assert pos is not None
+    # the guard floored to szDecimals=2; nothing downstream re-derived it
+    assert seen["size"] > 0
+    assert seen["size"] == pytest.approx(pos.size)
+    assert seen["resting"] is False
+    assert seen["entry_px"] > 0
+    # and the lot never risks more than the approved 3% of the $1000 bankroll
+    assert abs(pos.entry_px - pos.stop_px) * seen["size"] <= 15.0 * 1.05
+
+
 def test_context_uses_adapter_available_margin_not_withdrawable_guess(tmp_path):
     eng, state, _, analyst = mk(tmp_path, [{"actions": []}])
 
@@ -690,7 +720,7 @@ def test_ambiguous_live_entry_submission_is_journaled_and_not_retried(tmp_path):
     eng.adapter = adapter
     preview = {
         "kind": "open", "mode": "live", "market": "SOL", "side": "long",
-        "reference_mark": 100.0, "size": 5.0, "notional": 500.0,
+        "reference_mark": 100.0, "entry_px": 100.0, "size": 5.0, "notional": 500.0,
         "risk_usd": 15.0, "leverage": 10, "margin_mode": "isolated",
         "required_margin": 50.0, "available_margin": 1000.0,
         "stop_px": 97.0, "tp_px": 107.0,
@@ -2189,7 +2219,15 @@ def test_a_round_trip_between_reconciles_keeps_its_pnl_and_cooldown(tmp_path):
     assert closed["market"] == "SOL"
     assert closed["entry_px"] == pytest.approx(100.0)
     assert closed["close_reason"] == "sl"
-    assert closed["realized_pnl"] == pytest.approx(-4.101)
+    # gross closedPnl -4.0, close fee 0.101, AND the 0.105 it cost to get in.
+    # HL charges the entry fee on the OPENING fill and reports closedPnl gross,
+    # so a reconstructed round trip that ignored it read better than it was --
+    # inflating the measured record the analyst learns from (handoff 09-05 s4).
+    assert closed["realized_pnl"] == pytest.approx(-4.206)
+    row = state.db.execute(
+        "SELECT entry_fee FROM positions WHERE market='SOL' AND status='closed'"
+    ).fetchone()
+    assert row["entry_fee"] == pytest.approx(0.105)
     # the cooldown is the point: a losing stop must lock the market out
     assert state.cooldown_until("SOL", time.time()) is not None
     assert state.entries_today(utc_day(time.time())) == 1

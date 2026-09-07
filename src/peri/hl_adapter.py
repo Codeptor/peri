@@ -305,15 +305,18 @@ class HyperliquidAdapter:
 
     def open_entry(self, ap: Approved, mark: float) -> dict:
         coin, is_long = ap.market, ap.side == "long"
-        mi = self.market.info(coin)
         self.ex.update_leverage(
             int(ap.leverage), coin, is_cross=ap.margin_mode == "cross"
         )
         # the guard already produced the exact venue lot; re-deriving it here was
-        # a second rounding site that could disagree with what was approved
-        size = ap.size if ap.size > 0 else round(ap.notional / mark, mi.sz_decimals)
+        # a second rounding site that could disagree with what was approved, and
+        # round() could land ABOVE the approved risk. There is no safe fallback:
+        # an Approved without a lot is a bug upstream, so say so instead of guessing.
+        size = ap.size
         if size <= 0:
-            raise RuntimeError(f"size rounds to 0 for {coin} notional ${ap.notional:.2f}")
+            raise RuntimeError(
+                f"{coin}: Approved carries no venue lot (size={ap.size!r}) — the guard "
+                "sizes and floors every entry; refusing to re-derive it here")
         response = self.ex.market_open(
             coin, is_buy=is_long, sz=size, slippage=self.slippage, builder=self.builder
         )

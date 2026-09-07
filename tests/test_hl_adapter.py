@@ -110,9 +110,10 @@ def mk(builder=TRENCH_BUILDER):
 
 
 def approved(**kw):
+    # size is the guard's floored venue lot; the adapter no longer re-derives it
     base = dict(market="SOL", side="long", notional=15.0, size_usd_risk=0.3,
                 leverage=10.0, margin=1.5, margin_mode="isolated",
-                stop_px=99.0, tp_px=103.0)
+                stop_px=99.0, tp_px=103.0, entry_px=100.0, size=0.15)
     base.update(kw)
     return Approved(**base)
 
@@ -151,9 +152,23 @@ def test_open_unfilled_raises():
 
 
 def test_open_zero_size_raises():
+    """An Approved with no venue lot is an upstream bug, not something to guess
+    around: the adapter used to re-derive size with round(), which could land
+    ABOVE the risk the guard approved."""
     a, _, _ = mk()
-    with pytest.raises(RuntimeError):
-        a.open(approved(notional=0.0001), mark=100.0)
+    with pytest.raises(RuntimeError, match="no venue lot"):
+        a.open(approved(notional=0.0001, size=0.0), mark=100.0)
+
+
+def test_open_sends_exactly_the_lot_the_guard_approved():
+    """The guard FLOORS to the venue step. Re-deriving from notional/mark with
+    round() rounds half-UP, so a lot the guard floored to 0.15 could be sent as
+    0.2 — more risk than was ever approved."""
+    a, ex, _ = mk()
+    # notional/mark = 0.179..., which round(1dp) would take UP to 0.2
+    a.open(approved(notional=17.9, size=0.1), mark=100.0)
+    assert ex.orders[0][0] == "market_open"
+    assert ex.orders[0][3] == 0.1
 
 
 def pos(**kw):

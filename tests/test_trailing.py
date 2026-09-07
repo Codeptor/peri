@@ -111,3 +111,23 @@ def test_the_alert_says_which_mechanism_moved_the_stop(tmp_path):
     eng2, _s2, notes2, _p2 = setup(other, trail_start_r=0.0, breakeven=1.0)
     eng2.manage_positions({"xyz:CL": 87.5})
     assert any("breakeven" in line for line in notes2.lines), notes2.lines
+
+
+def test_a_position_whose_venue_stop_vanished_still_ratchets_without_killing_the_cycle(
+        tmp_path):
+    """`better` deliberately admits stop_px=None (the venue stop is gone and
+    sync_live_brackets wrote NULL). The notify line then formatted it with :g,
+    OUTSIDE the try that guards the venue call — so the stop moved and the
+    TypeError propagated out of context_snapshot, aborting the whole cycle as
+    "context DOWN": no analyst, no time stop, no orphan recovery.
+    """
+    eng, state, notes, pos = setup(tmp_path)
+    state.update_brackets(pos.id, None, 89.5)
+    assert stop_of(state, pos.id) is None
+
+    changed = eng.manage_positions({"xyz:CL": 87.0})
+
+    assert changed is True
+    trailed = stop_of(state, pos.id)
+    assert trailed is not None and trailed > 85.6
+    assert any("none ->" in line for line in notes.lines), notes.lines

@@ -10,6 +10,7 @@ import json
 import sqlite3
 import threading
 import time
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from typing import Optional
 
@@ -1219,6 +1220,22 @@ class State:
              _json(entry_context or {}), time.time(), expires_ts))
         self.db.commit()
         return int(cur.lastrowid)
+
+    def resting_entries_today(self, day: str) -> int:
+        """Resting orders placed today that are still live on the book.
+
+        The daily cap counted only FILLED entries, and a resting entry is only
+        counted when it fills — so three orders parked against a cap already at
+        2/3 all passed the gate and could all fill, taking five entries on a
+        three-entry day. Counting live orders alongside filled ones keeps the
+        arithmetic consistent: a fill moves one from this side to the other, and
+        an expiry gives the slot back."""
+        start = datetime.strptime(day, "%Y-%m-%d").replace(
+            tzinfo=timezone.utc).timestamp()
+        r = self.db.execute(
+            "SELECT COUNT(*) AS n FROM pending_entries WHERE status='resting'"
+            " AND placed_ts >= ? AND placed_ts < ?", (start, start + 86400)).fetchone()
+        return int(r["n"]) if r else 0
 
     def resting_entries(self) -> list[dict]:
         return [dict(r) for r in self.db.execute(
