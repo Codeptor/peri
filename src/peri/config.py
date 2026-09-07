@@ -85,6 +85,10 @@ class RiskCfg:
     event_blackout_mins: int = 0        # no new entry this soon before a HIGH-impact
                                         #   calendar event (0 = off). Entering minutes
                                         #   before NFP is a coin flip, not a thesis.
+    max_mark_drift_pct: float = 0.5     # refuse a MARKET entry whose mark moved more
+                                        #   than this while the analyst was deciding
+                                        #   (0 = off). Matches the tolerance the chat
+                                        #   confirmation path has always applied.
 
 
 @dataclass
@@ -235,7 +239,8 @@ def load_config(path: str = "config.toml", env_path: str = ".env") -> Config:
                      float(r.get("trail_start_r", 0.0)),
                      float(r.get("trail_atr_mult", 1.5)),
                      int(r.get("entry_expiry_secs", 7200)),
-                     int(r.get("event_blackout_mins", 0))),
+                     int(r.get("event_blackout_mins", 0)),
+                     float(r.get("max_mark_drift_pct", 0.5))),
         news=NewsCfg(list(n["rss"]), int(n["max_headlines"]),
                      list(n.get("tg_channels", []))),
         notify=NotifyCfg(evi("TG_NOTIFY_CHAT_ID", no.get("chat_id", 0))),

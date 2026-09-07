@@ -7,13 +7,9 @@ from typing import Optional, Protocol
 from peri.risk import Approved
 from peri.state import Position, State
 
-# One side of a round trip. Verified against the live account 2026-08-29
-# (userFees): HL taker 4.5bp, HL maker 1.5bp, Trench builder 3bp on every order.
-# The previous 10.5bp assumed a 7.5bp taker and overstated costs by 40%, which
-# made the projected-net-TP floor refuse trades that would have cleared it.
-TAKER_FEE_RATE = 0.00045 + 0.0003     # 7.5bp — market entry or a triggered exit
-MAKER_FEE_RATE = 0.00015 + 0.0003     # 4.5bp — a resting limit entry that fills
-FEE_RATE = TAKER_FEE_RATE
+# The schedule lives in peri.fees — one definition, imported everywhere. These
+# re-exports keep every existing `from peri.router import FEE_RATE` working.
+from peri.fees import FEE_RATE, MAKER_FEE_RATE, TAKER_FEE_RATE  # noqa: F401
 # Paper fills cross the spread: 2bp adverse to the order direction.
 PAPER_SLIP = 0.0002
 
@@ -91,7 +87,10 @@ class DryRunAdapter:
 
     def open(self, ap: Approved, mark: float) -> dict:
         entry_px = mark * (1 + PAPER_SLIP) if ap.side == "long" else mark * (1 - PAPER_SLIP)
-        size = ap.notional / mark
+        # Honour the guard's floored venue lot. Deriving size from notional here
+        # let paper fills use a size the venue would never accept, so dry mode
+        # silently modelled a different trade from the one live would place.
+        size = ap.size if ap.size > 0 else ap.notional / mark
         self.fees_paid += ap.notional * FEE_RATE
         return {"entry_px": entry_px, "size": round(size, 6)}
 

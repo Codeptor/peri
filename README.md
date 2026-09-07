@@ -65,7 +65,7 @@ Hyperliquid account, and an OpenAI-compatible chat endpoint.
 git clone <this repo> peri && cd peri
 uv sync --group dev
 cp .env.example .env && chmod 600 .env   # then fill it in
-uv run --group dev pytest -q             # 431 tests, no network
+uv run --group dev pytest -q             # 453 tests, no network
 ```
 
 **Hyperliquid.** Mint an agent wallet that can sign orders but cannot withdraw:

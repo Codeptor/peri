@@ -24,6 +24,7 @@ from typing import Optional, Union
 from zoneinfo import ZoneInfo
 
 from peri.config import RiskCfg
+from peri.fees import round_trip_rate
 from peri.hl_sizing import notional_to_size
 from peri.models import OpenAction
 from peri.state import State
@@ -246,8 +247,15 @@ class Guard:
         ):
             return Refusal(
                 f"max concurrent Peri positions ({self.cfg.max_concurrent}) reached")
-        if self.state.entries_today(day) >= self.cfg.daily_entry_cap:
-            return Refusal(f"daily entry cap ({self.cfg.daily_entry_cap}) reached")
+        # Count orders ALREADY ON THE BOOK, not just filled entries. A resting
+        # entry was only counted when it filled, so three orders parked against
+        # a cap sitting at 2/3 all cleared this gate and could all fill — five
+        # entries on a three-entry day. A fill moves one from resting to
+        # counted; an expiry gives the slot back, so the total stays honest.
+        taken = self.state.entries_today(day) + self.state.resting_entries_today(day)
+        if taken >= self.cfg.daily_entry_cap:
+            return Refusal(f"daily entry cap ({self.cfg.daily_entry_cap}) reached"
+                           f" — {taken} entered or resting today")
         if a.market in open_markets:
             return Refusal(f"position already open on {a.market}")
         if a.market in reserved_order_markets:
@@ -473,13 +481,12 @@ class Guard:
                 f"${risk_usd:.2f} — this market's lot is too coarse for this size")
 
         # projected-net-TP floor (2026-08-28 policy: aim $4-5, refuse below the
-        # configured floor). Fees mirror router.FEE_RATE (taker 7.5bp + trench
-        # builder 3bp per side; risk.py cannot import router — circular).
+        # configured floor). The rates used to be inlined here as literals,
+        # because risk.py cannot import router without a cycle — so the gate
+        # deciding whether a trade clears its costs could silently disagree with
+        # the ledger booking them. peri.fees imports nothing and settles it.
         if self.cfg.tp_net_floor_usd > 0:
-            # a resting entry pays the maker side; both mirror router.FEE_RATE
-            # (risk.py cannot import router — circular)
-            entry_rate = 0.00045 if resting else 0.00075
-            round_trip_fees = notional * (entry_rate + 0.00075)
+            round_trip_fees = notional * round_trip_rate(resting)
             projected_net_tp = rr * risk_usd - round_trip_fees
             if projected_net_tp < self.cfg.tp_net_floor_usd:
                 return Refusal(

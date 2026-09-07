@@ -581,3 +581,24 @@ def test_the_position_cap_in_the_prompt_comes_from_config_not_a_hardcoded_one():
         a = Analyst(CFG, "k", "https://x/v1", "m", 0.75, 2.0, 20.0, rails=rails)
         assert f"at most {cap} autonomous position" in a.system
     assert "at most ONE autonomous position" not in a.system
+
+
+def test_the_measured_record_shows_what_worked_not_only_what_lost():
+    """best_markets was computed every cycle and never rendered. The prompt
+    could tell the model which markets had cost it money but never which had
+    paid — and avoidance is only half a policy: it needs to know where to lean
+    in, not just what to skip."""
+    b = dict(BUNDLE, performance={
+        "overall": {"n": 27, "wins": 12, "win_rate": 0.44, "pnl": -24.98,
+                    "avg_r": -0.14, "median_hold_mins": 120.0},
+        "worst_markets": {"BTC": {"n": 5, "wins": 2, "win_rate": 0.4,
+                                  "pnl": -28.49, "avg_r": -0.89,
+                                  "median_hold_mins": 133.0}},
+        "best_markets": {"SOL": {"n": 4, "wins": 3, "win_rate": 0.75,
+                                 "pnl": 6.03, "avg_r": 0.38,
+                                 "median_hold_mins": 338.0}},
+    })
+    p = build_prompt(b, now=1000.0)
+
+    assert "markets that have cost you most: BTC $-28.49 (5)" in p
+    assert "markets that have paid you most: SOL $+6.03 (4)" in p

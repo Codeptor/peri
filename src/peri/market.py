@@ -12,6 +12,8 @@ from typing import Callable
 
 import httpx
 
+from peri.fees import TAKER_FEE_RATE
+
 INFO_URLS = {
     "mainnet": "https://api.hyperliquid.xyz/info",
     "testnet": "https://api.hyperliquid-testnet.xyz/info",
@@ -188,4 +190,4 @@ def candle_features(cs: list[dict]) -> dict:
 
 def close_fee_rate() -> float:
     """One taker side: HL 4.5bp + trench builder 3bp (verified 2026-08-29)."""
-    return 0.00075
+    return TAKER_FEE_RATE

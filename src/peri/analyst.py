@@ -605,6 +605,13 @@ def render_context(bundle: dict, now: Optional[float] = None) -> str:
         if worst:
             L.append("  markets that have cost you most: " + ", ".join(
                 f"{m} ${b['pnl']:+.2f} ({b['n']})" for m, b in worst.items()))
+        # best_markets was computed every cycle and never rendered, so the prompt
+        # could tell the model what had cost it money but never what had worked.
+        # Avoidance is only half a policy: it needs to know where to lean IN.
+        best = perf.get("best_markets") or {}
+        if best:
+            L.append("  markets that have paid you most: " + ", ".join(
+                f"{m} ${b['pnl']:+.2f} ({b['n']})" for m, b in best.items()))
 
     if bundle.get("lessons"):
         L.append("\nYOUR MEMORY (lessons you wrote after earlier trades — you carry "

@@ -75,7 +75,17 @@ async def main(once: bool) -> None:
         print(f"[peri] images read by {reader.model} "
               f"(<={cfg.telegram.max_image_mb:g}MB, "
               f"{cfg.telegram.vision_max_per_hour}/hour)", flush=True)
-    feed = Feed(engine.state, cfg.telegram.callers, wake, reader=reader)
+    # Route the feed's wake through request_wake so a caller message is LABELLED
+    # as one. Setting the raw Event left _wake_trigger at whatever a pending
+    # price wake had written, and `caller_wake_skip_tools` matches the trigger
+    # string exactly — so the scalp-call fast path was silently lost whenever a
+    # price wake was already queued.
+    class _CallerWake:
+        @staticmethod
+        def set() -> None:
+            engine.request_wake("caller message")
+
+    feed = Feed(engine.state, cfg.telegram.callers, _CallerWake(), reader=reader)
     feed.attach(client, cfg.telegram.group_id)
     # telethon matches username chat filters only for resolved entities —
     # resolve explicitly and loudly skip any channel that won't resolve
