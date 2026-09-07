@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily kestrel candle capture — the only defence against Hyperliquid's ~3.6-day 1m retention
+
+[Timer]
+# After the UTC day-roll (kestreld writes its daily digest at 00:00Z) so a full day is settled.
+OnCalendar=*-*-* 03:17:00 UTC
+# Catch up after the machine was off — WSL2 is not always running at 03:17.
+Persistent=true
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

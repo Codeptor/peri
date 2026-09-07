@@ -1,0 +1,33 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "base-lyra",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "../../packages/ui/src/styles/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
+  "iconLibrary": "remixicon",
+  "aliases": {
+    "components": "@/components",
+    "hooks": "@/hooks",
+    "lib": "@/lib",
+    "utils": "@workspace/ui/lib/utils",
+    "ui": "@workspace/ui/components"
+  },
+  "rtl": false,
+  "menuColor": "inverted",
+  "menuAccent": "subtle",
+  "registries": {
+    "@bklit": "https://bklit.com/r/{name}.json",
+    "@evilcharts": "https://evilcharts.com/r/{name}.json",
+    "@kibo-ui": "https://www.kibo-ui.com/r/{name}.json",
+    "@openstatus": "https://openstatus.dev/r/{name}.json",
+    "@coss": "https://coss.com/ui/r/{name}.json",
+    "@shadcn-dashboard": "https://shadcndashboard.dev/r/{name}.json",
+    "@tweakcn": "https://tweakcn.com/r/themes/{name}.json",
+    "@ai-elements": "https://registry.ai-sdk.dev/{name}.json"
+  }
+}

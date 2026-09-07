@@ -1,0 +1,36 @@
+{
+  "kill": {
+    "active": false,
+    "day_open": 10342.18,
+    "threshold_px_pct": 12.0
+  },
+  "daily": {
+    "count": 14,
+    "cap": 20
+  },
+  "morning": {
+    "before_noon_utc": true,
+    "count": 14,
+    "budget": 12
+  },
+  "staleness": {
+    "age_ms": 1840,
+    "max_ms": 120000,
+    "stale": false
+  },
+  "regime": {
+    "btc_vol1h": 0.84,
+    "max": 1.5,
+    "active": false
+  },
+  "per_market": [
+    { "market": "BTC", "entries_today": 2, "cap": 3 },
+    { "market": "ETH", "entries_today": 1, "cap": 3 },
+    { "market": "HYPE", "entries_today": 1, "cap": 3 },
+    { "market": "SOL", "entries_today": 3, "cap": 3 }
+  ],
+  "cooldowns": [
+    { "market": "SOL", "until_ts": 1786192800000, "cause": "sl" },
+    { "market": "HYPE", "until_ts": 1786187100000, "cause": "other" }
+  ]
+}

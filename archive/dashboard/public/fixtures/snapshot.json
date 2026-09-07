@@ -1,0 +1,106 @@
+{
+  "ts": 1786185622236,
+  "markets": [
+    {
+      "market": "BTC",
+      "mid": 67842.12,
+      "mark": 67840.5,
+      "oracle": 67839.0,
+      "funding": 0.00012,
+      "open_interest": 123456789,
+      "day_ntl_vlm": 987654321,
+      "prev_day_px": 66500.0,
+      "features": {
+        "r5m": 0.08,
+        "r1h": 0.45,
+        "r24h": 1.9,
+        "vol1h": 0.28,
+        "funding_z": 0.42,
+        "range_pos": 0.68
+      }
+    },
+    {
+      "market": "SOL",
+      "mid": 142.85,
+      "mark": 142.84,
+      "oracle": 142.9,
+      "funding": 8e-05,
+      "open_interest": 45678901,
+      "day_ntl_vlm": 234567890,
+      "prev_day_px": 138.2,
+      "features": {
+        "r5m": -0.15,
+        "r1h": -0.9,
+        "r24h": -2.3,
+        "vol1h": 0.62,
+        "funding_z": -1.8,
+        "range_pos": 0.22
+      }
+    },
+    {
+      "market": "ETH",
+      "mid": 2512.33,
+      "mark": 2512.1,
+      "oracle": 2511.8,
+      "funding": 5e-05,
+      "open_interest": 98765432,
+      "day_ntl_vlm": 543210987,
+      "prev_day_px": 2480.0,
+      "features": {
+        "r5m": 0.22,
+        "r1h": 1.12,
+        "r24h": 3.4,
+        "vol1h": 0.41,
+        "funding_z": 2.9,
+        "range_pos": 0.88
+      }
+    },
+    {
+      "market": "xyz:TSLA",
+      "mid": 412.55,
+      "mark": 412.6,
+      "oracle": 412.3,
+      "funding": 2e-05,
+      "open_interest": 1234567,
+      "day_ntl_vlm": 8765432,
+      "prev_day_px": 405.0,
+      "features": {
+        "r5m": 0.31,
+        "r1h": 1.45,
+        "r24h": 0.9,
+        "vol1h": 0.55,
+        "funding_z": 0.15,
+        "range_pos": 0.91
+      }
+    },
+    {
+      "market": "xyz:GOLD",
+      "mid": 2688.4,
+      "mark": 2688.1,
+      "oracle": 2688.0,
+      "funding": -1e-05,
+      "open_interest": 2345678,
+      "day_ntl_vlm": 4567890,
+      "prev_day_px": 2670.0,
+      "features": null
+    },
+    {
+      "market": "xyz:NVDA",
+      "mid": 178.22,
+      "mark": 178.2,
+      "oracle": 178.3,
+      "funding": 9e-05,
+      "open_interest": 3456789,
+      "day_ntl_vlm": 9876543,
+      "prev_day_px": 182.5,
+      "features": {
+        "r5m": -0.4,
+        "r1h": -1.8,
+        "r24h": -1.2,
+        "vol1h": 0.48,
+        "funding_z": 1.1,
+        "range_pos": 0.12
+      }
+    }
+  ]
+}

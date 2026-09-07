@@ -1,0 +1,30 @@
+.env
+*.session*
+messages_dump*
+media/
+__pycache__/
+.venv/
+.worktrees/
+*.db
+*.db-shm
+*.db-wal
+*.db.*
+kestreld/target/
+dash/node_modules
+dash/.next
+dash/out
+dash/dash.log
+tg_news_pipe.log
+kestreld/smoke.log
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+graft/
+.playwright-mcp/
+.claude/settings.local.json
+*.log
+
+# operator artifacts that are not the project: agent transcripts, ad-hoc dumps,
+# pre-migration copies of the ledger and the Telegram login.
+peribot.txt
+*.transcript.txt
+.env.bak*

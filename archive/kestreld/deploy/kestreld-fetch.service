@@ -1,0 +1,20 @@
+[Unit]
+Description=kestrel — capture 1m candles + funding into backtest_cache.db (PAPER-ONLY, read-only market data)
+Documentation=file:%h/botta/kestreld/deploy/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/botta/kestreld
+# Hyperliquid serves only ~3.6 days of 1m candleSnapshot history: a day not captured is gone
+# FOREVER. The window is deliberately wider than one day so a missed run self-heals — the fetch
+# is cache-first (the coverage table means already-stored ranges cost zero requests).
+# %% escapes % for systemd; dates are UTC to match the cache's day keys.
+ExecStart=/bin/sh -c 'exec "%h/botta/kestreld/target/release/kestreld" backtest fetch --from "$(date -u -d "4 days ago" +%%Y-%%m-%%d)" --to "$(date -u +%%Y-%%m-%%d)"'
+Environment=RUST_LOG=info
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kestrel-fetch
+# A cold full-universe day is ~6.5 min; a warm incremental run is seconds.
+TimeoutStartSec=2700

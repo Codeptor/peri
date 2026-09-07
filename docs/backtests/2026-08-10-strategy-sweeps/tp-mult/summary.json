@@ -1,0 +1,116 @@
+{
+  "label": "tp-mult",
+  "from": "2026-08-06 00:00",
+  "to": "2026-08-09 22:07",
+  "from_ms": 1785974400000,
+  "to_ms": 1786313220000,
+  "markets": 271,
+  "bars": 5373,
+  "axes": {
+    "sizing.tp_mult": [
+      "2.0",
+      "2.5",
+      "3.0"
+    ]
+  },
+  "base_overrides": [],
+  "caveats": [
+    "mechanical replay — no analyst judgment, no news: conviction is fixed at 0.75 for every entry and the screener's side_hint is taken as the side (spec Decision 2)",
+    "no review loop: no veto closes, no stop moves, no analyst time-stop — brackets and the horizon are the only exits (spec Decision 5)",
+    "exits: SL is checked before TP inside a candle (a candle touching both is scored as the stop) and fills AT the trigger; the 24h horizon fills at the candle close (spec Decision 5)",
+    "entries fill at the next 1m open plus flat slip (2bp native / 5bp dex); 7.5bp taker fee per side (spec Decision 5)",
+    "day_ntl_vlm is proxied by rolling 24h candle quote volume — the venue does not serve historical dayNtlVlm, and this proxy decides WHICH markets clear the universe filter (spec Decision 4)",
+    "features are computed on 1m candle closes, not the live 1/5s mid tape; trade prints cross the spread, so vol1h runs slightly hotter than live (spec Decision 4)",
+    "open_interest is 0.0 throughout — historical OI is not served (nothing in the screener, sizing or the gates reads it)",
+    "the screener ticks every 1m (live: 45s) — the closest candle-aligned cadence (spec Decision 6)"
+  ],
+  "rows": [
+    {
+      "label": "sizing.tp_mult=2.0",
+      "slug": "sizing.tp_mult-2.0",
+      "combo": {
+        "sizing.tp_mult": "2.0"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.tp_mult=2.0"
+      ],
+      "net_pnl": -71.29860023999555,
+      "gross_pnl": 15.804621329334793,
+      "unrealized_pnl": 14.193738948062503,
+      "max_drawdown": 102.98317944151313,
+      "max_drawdown_pct": 10.221641191486238,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.902579223896046,
+      "payoff": 1.5474585404950534,
+      "fees": 87.10322156933034,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 942.895138708067,
+      "return_pct": -5.7104861291933044,
+      "kill_days": []
+    },
+    {
+      "label": "sizing.tp_mult=2.5",
+      "slug": "sizing.tp_mult-2.5",
+      "combo": {
+        "sizing.tp_mult": "2.5"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.tp_mult=2.5"
+      ],
+      "net_pnl": -71.60602587340095,
+      "gross_pnl": 15.457469989401549,
+      "unrealized_pnl": 13.514071506306848,
+      "max_drawdown": 95.71876262604928,
+      "max_drawdown_pct": 9.500608275666801,
+      "entries": 80,
+      "closes": 78,
+      "win_rate": 32.05128205128205,
+      "expectancy": -0.9026413573512951,
+      "payoff": 1.7941751615790633,
+      "fees": 87.0634958628025,
+      "tp": 22,
+      "sl": 52,
+      "time_stop": 4,
+      "open_at_end": 2,
+      "end_equity": 941.9080456329059,
+      "return_pct": -5.809195436709411,
+      "kill_days": []
+    },
+    {
+      "label": "sizing.tp_mult=3.0",
+      "slug": "sizing.tp_mult-3.0",
+      "combo": {
+        "sizing.tp_mult": "3.0"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.tp_mult=3.0"
+      ],
+      "net_pnl": -111.27891892891617,
+      "gross_pnl": -24.962897414483855,
+      "unrealized_pnl": -5.201471589711758,
+      "max_drawdown": 167.53430746071228,
+      "max_drawdown_pct": 16.62869205839675,
+      "entries": 79,
+      "closes": 78,
+      "win_rate": 28.205128205128204,
+      "expectancy": -1.4189604990886708,
+      "payoff": 1.9699173902483158,
+      "fees": 86.31602151443232,
+      "tp": 18,
+      "sl": 55,
+      "time_stop": 5,
+      "open_at_end": 1,
+      "end_equity": 883.5196094813721,
+      "return_pct": -11.648039051862792,
+      "kill_days": []
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+[Unit]
+Description=kestreld — Kestrel autonomous paper trader daemon (PAPER-ONLY, no live orders)
+Documentation=file:%h/botta/kestreld/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/botta/kestreld
+ExecStart=%h/botta/kestreld/target/release/kestreld --config kestreld.toml
+# Release profile is panic=abort: a panic exits non-zero and systemd brings it back.
+Restart=on-failure
+RestartSec=5
+# main() shuts down on SIGINT (ctrl_c handler); SIGTERM would skip that path.
+KillSignal=SIGINT
+TimeoutStopSec=20
+Environment=RUST_LOG=info
+# Secrets stay in %h/botta/.env (0600) — dotenvy loads ./.env and ../.env from
+# WorkingDirectory, so no EnvironmentFile= line is needed and none should be added.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kestreld
+
+[Install]
+WantedBy=default.target

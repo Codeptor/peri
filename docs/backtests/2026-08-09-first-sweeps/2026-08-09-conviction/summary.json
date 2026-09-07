@@ -1,0 +1,114 @@
+{
+  "label": "conviction",
+  "from": "2026-08-06 00:00",
+  "to": "2026-08-08 23:59",
+  "from_ms": 1785974400000,
+  "to_ms": 1786233540000,
+  "markets": 271,
+  "bars": 4074,
+  "axes": {
+    "conviction": [
+      "0.70",
+      "0.75",
+      "0.80"
+    ]
+  },
+  "base_overrides": [],
+  "caveats": [
+    "mechanical replay — no analyst judgment, no news: conviction is fixed per run — this grid sweeps it over 0.70, 0.75, 0.80 and the screener's side_hint is taken as the side (spec Decision 2)",
+    "no review loop: no veto closes, no stop moves, no analyst time-stop — brackets and the horizon are the only exits (spec Decision 5)",
+    "exits: SL is checked before TP inside a candle (a candle touching both is scored as the stop) and fills AT the trigger; the 24h horizon fills at the candle close (spec Decision 5)",
+    "entries fill at the next 1m open plus flat slip (2bp native / 5bp dex); 7.5bp taker fee per side (spec Decision 5)",
+    "day_ntl_vlm is proxied by rolling 24h candle quote volume — the venue does not serve historical dayNtlVlm, and this proxy decides WHICH markets clear the universe filter (spec Decision 4)",
+    "features are computed on 1m candle closes, not the live 1/5s mid tape; trade prints cross the spread, so vol1h runs slightly hotter than live (spec Decision 4)",
+    "open_interest is 0.0 throughout — historical OI is not served (nothing in the screener, sizing or the gates reads it)",
+    "the screener ticks every 1m (live: 45s) — the closest candle-aligned cadence (spec Decision 6)",
+    "conviction axis: with no analyst every entry carries the same conviction, so risk.conviction_min moves with it (each run = 'the analyst always answered X'). What the axis measures is sizing — leverage 5+15·c·vol_ratio and margin bankroll·(0.01+0.04·c). Set risk.conviction_min explicitly to sweep the gate threshold instead."
+  ],
+  "rows": [
+    {
+      "label": "conviction=0.70",
+      "slug": "conviction-0.70",
+      "combo": {
+        "conviction": "0.70"
+      },
+      "conviction": 0.7,
+      "overrides": [
+        "risk.conviction_min=0.7"
+      ],
+      "net_pnl": -71.8772679328738,
+      "unrealized_pnl": 9.941589694850236,
+      "max_drawdown": 141.4454208813694,
+      "max_drawdown_pct": 13.366498296623913,
+      "entries": 60,
+      "closes": 57,
+      "win_rate": 33.33333333333333,
+      "expectancy": -1.231004700576733,
+      "payoff": 1.5358201210371674,
+      "fees": 58.678384331363375,
+      "tp": 19,
+      "sl": 36,
+      "time_stop": 2,
+      "open_at_end": 3,
+      "end_equity": 938.0643217619764,
+      "return_pct": -6.193567823802357,
+      "kill_days": []
+    },
+    {
+      "label": "conviction=0.75",
+      "slug": "conviction-0.75",
+      "combo": {
+        "conviction": "0.75"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.conviction_min=0.75"
+      ],
+      "net_pnl": -75.77930715968137,
+      "unrealized_pnl": 10.46483125773716,
+      "max_drawdown": 150.7187014448449,
+      "max_drawdown_pct": 14.210382437860725,
+      "entries": 60,
+      "closes": 57,
+      "win_rate": 33.33333333333333,
+      "expectancy": -1.2978825817487947,
+      "payoff": 1.5421792282050713,
+      "fees": 62.6685074202634,
+      "tp": 19,
+      "sl": 36,
+      "time_stop": 2,
+      "open_at_end": 3,
+      "end_equity": 934.6855240980558,
+      "return_pct": -6.531447590194421,
+      "kill_days": []
+    },
+    {
+      "label": "conviction=0.80",
+      "slug": "conviction-0.80",
+      "combo": {
+        "conviction": "0.80"
+      },
+      "conviction": 0.8,
+      "overrides": [
+        "risk.conviction_min=0.8"
+      ],
+      "net_pnl": -79.94816251766542,
+      "unrealized_pnl": 10.988072820623984,
+      "max_drawdown": 158.9275815170871,
+      "max_drawdown_pct": 14.937531836279891,
+      "entries": 60,
+      "closes": 57,
+      "win_rate": 33.33333333333333,
+      "expectancy": -1.369441447678341,
+      "payoff": 1.5425455583229697,
+      "fees": 66.18182279127655,
+      "tp": 19,
+      "sl": 36,
+      "time_stop": 2,
+      "open_at_end": 3,
+      "end_equity": 931.0399103029586,
+      "return_pct": -6.896008969704144,
+      "kill_days": []
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "label": "stop-floor",
+  "from": "2026-08-06 00:00",
+  "to": "2026-08-08 23:59",
+  "from_ms": 1785974400000,
+  "to_ms": 1786233540000,
+  "markets": 271,
+  "bars": 4074,
+  "axes": {
+    "sizing.stop_floor_pct": [
+      "0.6",
+      "1.0",
+      "1.4"
+    ]
+  },
+  "base_overrides": [],
+  "caveats": [
+    "mechanical replay — no analyst judgment, no news: conviction is fixed at 0.75 for every entry and the screener's side_hint is taken as the side (spec Decision 2)",
+    "no review loop: no veto closes, no stop moves, no analyst time-stop — brackets and the horizon are the only exits (spec Decision 5)",
+    "exits: SL is checked before TP inside a candle (a candle touching both is scored as the stop) and fills AT the trigger; the 24h horizon fills at the candle close (spec Decision 5)",
+    "entries fill at the next 1m open plus flat slip (2bp native / 5bp dex); 7.5bp taker fee per side (spec Decision 5)",
+    "day_ntl_vlm is proxied by rolling 24h candle quote volume — the venue does not serve historical dayNtlVlm, and this proxy decides WHICH markets clear the universe filter (spec Decision 4)",
+    "features are computed on 1m candle closes, not the live 1/5s mid tape; trade prints cross the spread, so vol1h runs slightly hotter than live (spec Decision 4)",
+    "open_interest is 0.0 throughout — historical OI is not served (nothing in the screener, sizing or the gates reads it)",
+    "the screener ticks every 1m (live: 45s) — the closest candle-aligned cadence (spec Decision 6)"
+  ],
+  "rows": [
+    {
+      "label": "sizing.stop_floor_pct=1.0",
+      "slug": "sizing.stop_floor_pct-1.0",
+      "combo": {
+        "sizing.stop_floor_pct": "1.0"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.stop_floor_pct=1.0"
+      ],
+      "net_pnl": -75.77930715968137,
+      "unrealized_pnl": 10.46483125773716,
+      "max_drawdown": 150.7187014448449,
+      "max_drawdown_pct": 14.210382437860725,
+      "entries": 60,
+      "closes": 57,
+      "win_rate": 33.33333333333333,
+      "expectancy": -1.2978825817487947,
+      "payoff": 1.5421792282050713,
+      "fees": 62.6685074202634,
+      "tp": 19,
+      "sl": 36,
+      "time_stop": 2,
+      "open_at_end": 3,
+      "end_equity": 934.6855240980558,
+      "return_pct": -6.531447590194421,
+      "kill_days": []
+    },
+    {
+      "label": "sizing.stop_floor_pct=0.6",
+      "slug": "sizing.stop_floor_pct-0.6",
+      "combo": {
+        "sizing.stop_floor_pct": "0.6"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.stop_floor_pct=0.6"
+      ],
+      "net_pnl": -124.84261225685677,
+      "unrealized_pnl": -2.842170943040401e-14,
+      "max_drawdown": 142.01847068709242,
+      "max_drawdown_pct": 14.057501128006592,
+      "entries": 60,
+      "closes": 60,
+      "win_rate": 26.666666666666668,
+      "expectancy": -2.0807102042809453,
+      "payoff": 1.432712935373536,
+      "fees": 68.53518775363546,
+      "tp": 16,
+      "sl": 44,
+      "time_stop": 0,
+      "open_at_end": 0,
+      "end_equity": 875.1573877431432,
+      "return_pct": -12.48426122568568,
+      "kill_days": []
+    },
+    {
+      "label": "sizing.stop_floor_pct=1.4",
+      "slug": "sizing.stop_floor_pct-1.4",
+      "combo": {
+        "sizing.stop_floor_pct": "1.4"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.stop_floor_pct=1.4"
+      ],
+      "net_pnl": -148.01703625395254,
+      "unrealized_pnl": 30.00220691246267,
+      "max_drawdown": 194.0119487606994,
+      "max_drawdown_pct": 19.204003362065258,
+      "entries": 55,
+      "closes": 50,
+      "win_rate": 28.000000000000004,
+      "expectancy": -2.9003407250790496,
+      "payoff": 1.6149579170866104,
+      "fees": 55.26182413740494,
+      "tp": 13,
+      "sl": 34,
+      "time_stop": 3,
+      "open_at_end": 5,
+      "end_equity": 881.9851706585101,
+      "return_pct": -11.801482934148986,
+      "kill_days": []
+    }
+  ]
+}

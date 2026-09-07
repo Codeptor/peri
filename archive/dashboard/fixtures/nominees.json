@@ -1,0 +1,44 @@
+[
+  {
+    "ts": 1786185577236,
+    "market": "xyz:TSLA",
+    "side_hint": "long",
+    "score": 3.42,
+    "features": {
+      "r5m": 0.31,
+      "r1h": 1.45,
+      "r24h": 0.9,
+      "vol1h": 0.55,
+      "funding_z": 0.15,
+      "range_pos": 0.91
+    }
+  },
+  {
+    "ts": 1786185577236,
+    "market": "ETH",
+    "side_hint": "long",
+    "score": 2.91,
+    "features": {
+      "r5m": 0.22,
+      "r1h": 1.12,
+      "r24h": 3.4,
+      "vol1h": 0.41,
+      "funding_z": 2.9,
+      "range_pos": 0.88
+    }
+  },
+  {
+    "ts": 1786185577236,
+    "market": "SOL",
+    "side_hint": "short",
+    "score": 2.74,
+    "features": {
+      "r5m": -0.15,
+      "r1h": -0.9,
+      "r24h": -2.3,
+      "vol1h": 0.62,
+      "funding_z": -1.8,
+      "range_pos": 0.22
+    }
+  }
+]

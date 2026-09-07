@@ -1,0 +1,31 @@
+{
+  "calls": [
+    {
+      "id": 3,
+      "ts": 1787300002000,
+      "market": "SOL",
+      "trigger": "chat",
+      "prompt": "## Request\n\nAssess the **SOL** setup and explain whether an entry can execute.",
+      "response_raw": "## Decision\n\n| Field | Value |\n| --- | --- |\n| Action | `open` |\n| Side | **long** |\n| Conviction | 80% |",
+      "outcome_kind": "ok",
+      "parsed": {
+        "action": "open",
+        "side": "long"
+      },
+      "latency_ms": 1849,
+      "analyst": "deepseek-v4-flash-free"
+    },
+    {
+      "id": 2,
+      "ts": 1787299900000,
+      "market": "BTC",
+      "trigger": "review",
+      "prompt": "Review the BTC position for stop management.",
+      "response_raw": "Risk gate unavailable; no action returned.",
+      "outcome_kind": "http_err",
+      "parsed": null,
+      "latency_ms": 604,
+      "analyst": ""
+    }
+  ]
+}

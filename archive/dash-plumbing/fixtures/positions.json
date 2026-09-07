@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "market": "ETH",
+    "side": "long",
+    "entry_px": 2485.0,
+    "size": 0.84,
+    "leverage": 12,
+    "margin": 35,
+    "sl_px": 2452.3,
+    "tp_px": 2550.2,
+    "opened_ts": 1786167622236,
+    "mark_px": 2512.33,
+    "unrealized_pnl": 22.96,
+    "roe": 65.6
+  },
+  {
+    "id": 2,
+    "market": "xyz:TSLA",
+    "side": "short",
+    "entry_px": 418.2,
+    "size": 12.5,
+    "leverage": 8,
+    "margin": 28,
+    "sl_px": 424.5,
+    "tp_px": 405.1,
+    "opened_ts": 1786178422236,
+    "mark_px": 412.55,
+    "unrealized_pnl": 70.62,
+    "roe": 31.5
+  }
+]

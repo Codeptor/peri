@@ -1,0 +1,1 @@
+{"reply":"## SOL setup\n\nMomentum is constructive, but **DailyCap** is binding. Wait for capacity before adding exposure.\n\n| Signal | Read |\n| --- | --- |\n| Trend | Positive |\n| Gate | Daily cap |","action":{"type":"open","market":"SOL","side":"long","sl_pct":1.2,"tp_pct":2.4,"conviction":0.8,"executed":false,"gate_refusals":["DailyCap"]},"ts":1787300005000}

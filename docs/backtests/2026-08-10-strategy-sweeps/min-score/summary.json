@@ -1,0 +1,116 @@
+{
+  "label": "min-score",
+  "from": "2026-08-06 00:00",
+  "to": "2026-08-09 22:07",
+  "from_ms": 1785974400000,
+  "to_ms": 1786313220000,
+  "markets": 271,
+  "bars": 5373,
+  "axes": {
+    "screener.min_score": [
+      "1.8",
+      "2.5",
+      "3.5"
+    ]
+  },
+  "base_overrides": [],
+  "caveats": [
+    "mechanical replay — no analyst judgment, no news: conviction is fixed at 0.75 for every entry and the screener's side_hint is taken as the side (spec Decision 2)",
+    "no review loop: no veto closes, no stop moves, no analyst time-stop — brackets and the horizon are the only exits (spec Decision 5)",
+    "exits: SL is checked before TP inside a candle (a candle touching both is scored as the stop) and fills AT the trigger; the 24h horizon fills at the candle close (spec Decision 5)",
+    "entries fill at the next 1m open plus flat slip (2bp native / 5bp dex); 7.5bp taker fee per side (spec Decision 5)",
+    "day_ntl_vlm is proxied by rolling 24h candle quote volume — the venue does not serve historical dayNtlVlm, and this proxy decides WHICH markets clear the universe filter (spec Decision 4)",
+    "features are computed on 1m candle closes, not the live 1/5s mid tape; trade prints cross the spread, so vol1h runs slightly hotter than live (spec Decision 4)",
+    "open_interest is 0.0 throughout — historical OI is not served (nothing in the screener, sizing or the gates reads it)",
+    "the screener ticks every 1m (live: 45s) — the closest candle-aligned cadence (spec Decision 6)"
+  ],
+  "rows": [
+    {
+      "label": "screener.min_score=1.8",
+      "slug": "screener.min_score-1.8",
+      "combo": {
+        "screener.min_score": "1.8"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "screener.min_score=1.8"
+      ],
+      "net_pnl": -71.29860023999555,
+      "gross_pnl": 15.804621329334793,
+      "unrealized_pnl": 14.193738948062503,
+      "max_drawdown": 102.98317944151313,
+      "max_drawdown_pct": 10.221641191486238,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.902579223896046,
+      "payoff": 1.5474585404950534,
+      "fees": 87.10322156933034,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 942.895138708067,
+      "return_pct": -5.7104861291933044,
+      "kill_days": []
+    },
+    {
+      "label": "screener.min_score=2.5",
+      "slug": "screener.min_score-2.5",
+      "combo": {
+        "screener.min_score": "2.5"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "screener.min_score=2.5"
+      ],
+      "net_pnl": -71.29860023999555,
+      "gross_pnl": 15.804621329334793,
+      "unrealized_pnl": 14.193738948062503,
+      "max_drawdown": 102.98317944151313,
+      "max_drawdown_pct": 10.221641191486238,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.902579223896046,
+      "payoff": 1.5474585404950534,
+      "fees": 87.10322156933034,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 942.895138708067,
+      "return_pct": -5.7104861291933044,
+      "kill_days": []
+    },
+    {
+      "label": "screener.min_score=3.5",
+      "slug": "screener.min_score-3.5",
+      "combo": {
+        "screener.min_score": "3.5"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "screener.min_score=3.5"
+      ],
+      "net_pnl": -141.49508117928337,
+      "gross_pnl": -54.810498270253305,
+      "unrealized_pnl": 14.193738948062446,
+      "max_drawdown": 173.7776421569473,
+      "max_drawdown_pct": 17.23814566779513,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 31.16883116883117,
+      "expectancy": -1.8142218334971854,
+      "payoff": 1.5219965476704949,
+      "fees": 86.68458290903006,
+      "tp": 22,
+      "sl": 51,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 872.6986577687791,
+      "return_pct": -12.730134223122091,
+      "kill_days": []
+    }
+  ]
+}

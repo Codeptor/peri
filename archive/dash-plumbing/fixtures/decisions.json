@@ -1,0 +1,62 @@
+[
+  {
+    "ts": 1786185532236,
+    "market": "xyz:TSLA",
+    "action": "open",
+    "side": "long",
+    "conviction": 0.82,
+    "thesis": "Breakout above 410 on elevated 1h momentum (r1h 1.45%) with funding_z muted. News: Tesla Q4 delivery beat \u2014 sentiment tailwind. Risk: elevated vol1h 0.55% \u2192 8x lev, stop 0.83%.",
+    "horizon_hours": 24,
+    "vetoed": false,
+    "executed": true,
+    "reason": "muse-spark | 1420ms | ok"
+  },
+  {
+    "ts": 1786185442236,
+    "market": "ETH",
+    "action": "open",
+    "side": "long",
+    "conviction": 0.71,
+    "thesis": "Funding squeeze fade candidate but momentum dominates. Range_pos 0.88 near breakout. Thesis: continuation.",
+    "horizon_hours": 12,
+    "vetoed": false,
+    "executed": true,
+    "reason": "muse-spark | 2100ms | ok"
+  },
+  {
+    "ts": 1786185322236,
+    "market": "SOL",
+    "action": "skip",
+    "side": null,
+    "conviction": 0.48,
+    "thesis": "Weak momentum but funding_z -1.8 not sufficient for fade. Below conviction 0.65.",
+    "horizon_hours": null,
+    "vetoed": false,
+    "executed": false,
+    "reason": "muse-spark | 980ms | refused? no \u2014 conviction gate"
+  },
+  {
+    "ts": 1786185172236,
+    "market": "BTC",
+    "action": "skip",
+    "side": "short",
+    "conviction": 0.78,
+    "thesis": "Overbought intraday, but analyst vetoed: ETF outflow news stale, do not chase.",
+    "horizon_hours": 24,
+    "vetoed": true,
+    "executed": false,
+    "reason": "muse-spark | 3200ms | veto: stale news"
+  },
+  {
+    "ts": 1786185022236,
+    "market": "xyz:NVDA",
+    "action": "skip",
+    "side": "short",
+    "conviction": 0.88,
+    "thesis": "High vol breakdown, but market closed (US RTH) \u2014 de-risk, skip.",
+    "horizon_hours": null,
+    "vetoed": true,
+    "executed": false,
+    "reason": "muse-spark | 1100ms | market_closed"
+  }
+]
