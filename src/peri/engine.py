@@ -1215,6 +1215,11 @@ class Engine:
                        else self.state.recent_closes(8)),
             "refusals": self.state.recent_refusals(4, max_age_secs=2 * 3600),
             "fills": self._recent_venue_fills[:50] if self.cfg.mode == "live" else [],
+            # render_context has always had a RECENT DECISIONS section, but only
+            # the chat path ever populated it — so the autonomous cycle, the one
+            # that actually trades, could never see what it had just decided or
+            # why the last cycle passed.
+            "decisions": self.state.recent_decisions(8),
         }
 
     def _entry_context(self, market: str, resting: bool,
