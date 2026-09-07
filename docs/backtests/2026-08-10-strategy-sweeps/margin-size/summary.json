@@ -1,0 +1,577 @@
+{
+  "label": "margin-size",
+  "from": "2026-08-06 00:00",
+  "to": "2026-08-09 22:04",
+  "from_ms": 1785974400000,
+  "to_ms": 1786313040000,
+  "markets": 271,
+  "bars": 5373,
+  "axes": {
+    "margin": [
+      "20",
+      "40",
+      "80",
+      "160"
+    ],
+    "risk.daily_cap": [
+      "40",
+      "20",
+      "10",
+      "5"
+    ]
+  },
+  "base_overrides": [],
+  "caveats": [
+    "mechanical replay — no analyst judgment, no news: conviction is fixed at 0.75 for every entry and the screener's side_hint is taken as the side (spec Decision 2)",
+    "no review loop: no veto closes, no stop moves, no analyst time-stop — brackets and the horizon are the only exits (spec Decision 5)",
+    "exits: SL is checked before TP inside a candle (a candle touching both is scored as the stop) and fills AT the trigger; the 24h horizon fills at the candle close (spec Decision 5)",
+    "entries fill at the next 1m open plus flat slip (2bp native / 5bp dex); 7.5bp taker fee per side (spec Decision 5)",
+    "day_ntl_vlm is proxied by rolling 24h candle quote volume — the venue does not serve historical dayNtlVlm, and this proxy decides WHICH markets clear the universe filter (spec Decision 4)",
+    "features are computed on 1m candle closes, not the live 1/5s mid tape; trade prints cross the spread, so vol1h runs slightly hotter than live (spec Decision 4)",
+    "open_interest is 0.0 throughout — historical OI is not served (nothing in the screener, sizing or the gates reads it)",
+    "the screener ticks every 1m (live: 45s) — the closest candle-aligned cadence (spec Decision 6)",
+    "margin axis: pins sizing.margin_min AND sizing.margin_max to the swept value (clamp(x,v,v) = v), so every position's margin is exactly v dollars regardless of conviction — pair it with a daily_cap/max_concurrent sweep (moved the other way) to compare fewer-larger against more-smaller positions at a similar aggregate notional. Name sizing.margin_min/margin_max yourself to leave that end of the clamp alone."
+  ],
+  "rows": [
+    {
+      "label": "margin=20 risk.daily_cap=20",
+      "slug": "margin-20__risk.daily_cap-20",
+      "combo": {
+        "margin": "20",
+        "risk.daily_cap": "20"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=20",
+        "sizing.margin_max=20",
+        "risk.daily_cap=20"
+      ],
+      "net_pnl": -35.649300119997775,
+      "gross_pnl": 7.902310664667397,
+      "unrealized_pnl": 7.0968694740312515,
+      "max_drawdown": 51.49158972075645,
+      "max_drawdown_pct": 5.129918154570834,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.451289611948023,
+      "payoff": 1.5474585404950534,
+      "fees": 43.55161078466517,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 971.4475693540335,
+      "return_pct": -2.8552430645966522,
+      "kill_days": []
+    },
+    {
+      "label": "margin=20 risk.daily_cap=5",
+      "slug": "margin-20__risk.daily_cap-5",
+      "combo": {
+        "margin": "20",
+        "risk.daily_cap": "5"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=20",
+        "sizing.margin_max=20",
+        "risk.daily_cap=5"
+      ],
+      "net_pnl": -47.981409967671034,
+      "gross_pnl": -36.90924613333336,
+      "unrealized_pnl": 6.394884621840902e-14,
+      "max_drawdown": 51.732116494570846,
+      "max_drawdown_pct": 5.153880954522093,
+      "entries": 20,
+      "closes": 20,
+      "win_rate": 20.0,
+      "expectancy": -2.399070498383551,
+      "payoff": 1.1974829186810827,
+      "fees": 11.072163834337672,
+      "tp": 3,
+      "sl": 15,
+      "time_stop": 2,
+      "open_at_end": 0,
+      "end_equity": 952.018590032329,
+      "return_pct": -4.7981409967670965,
+      "kill_days": []
+    },
+    {
+      "label": "margin=20 risk.daily_cap=40",
+      "slug": "margin-20__risk.daily_cap-40",
+      "combo": {
+        "margin": "20",
+        "risk.daily_cap": "40"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=20",
+        "sizing.margin_max=20",
+        "risk.daily_cap=40"
+      ],
+      "net_pnl": -56.38846909917281,
+      "gross_pnl": 14.69206686792205,
+      "unrealized_pnl": 3.7682825533096747,
+      "max_drawdown": 59.83722951234756,
+      "max_drawdown_pct": 5.961363625774341,
+      "entries": 134,
+      "closes": 129,
+      "win_rate": 35.65891472868217,
+      "expectancy": -0.42549200852072055,
+      "payoff": 1.5213754796688685,
+      "fees": 71.08053596709486,
+      "tp": 44,
+      "sl": 81,
+      "time_stop": 4,
+      "open_at_end": 5,
+      "end_equity": 947.3798134541369,
+      "return_pct": -5.2620186545863135,
+      "kill_days": []
+    },
+    {
+      "label": "margin=40 risk.daily_cap=20",
+      "slug": "margin-40__risk.daily_cap-20",
+      "combo": {
+        "margin": "40",
+        "risk.daily_cap": "20"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=40",
+        "sizing.margin_max=40",
+        "risk.daily_cap=20"
+      ],
+      "net_pnl": -71.29860023999555,
+      "gross_pnl": 15.804621329334793,
+      "unrealized_pnl": 14.193738948062503,
+      "max_drawdown": 102.98317944151313,
+      "max_drawdown_pct": 10.221641191486238,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.902579223896046,
+      "payoff": 1.5474585404950534,
+      "fees": 87.10322156933034,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 942.895138708067,
+      "return_pct": -5.7104861291933044,
+      "kill_days": []
+    },
+    {
+      "label": "margin=20 risk.daily_cap=10",
+      "slug": "margin-20__risk.daily_cap-10",
+      "combo": {
+        "margin": "20",
+        "risk.daily_cap": "10"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=20",
+        "sizing.margin_max=20",
+        "risk.daily_cap=10"
+      ],
+      "net_pnl": -74.08270603244308,
+      "gross_pnl": -52.16426425436515,
+      "unrealized_pnl": 2.6069894368890942,
+      "max_drawdown": 82.07621784046341,
+      "max_drawdown_pct": 8.176952435177572,
+      "entries": 40,
+      "closes": 38,
+      "win_rate": 23.684210526315788,
+      "expectancy": -1.933755421906396,
+      "payoff": 1.3255272232653115,
+      "fees": 21.918441778077938,
+      "tp": 7,
+      "sl": 28,
+      "time_stop": 3,
+      "open_at_end": 2,
+      "end_equity": 928.524283404446,
+      "return_pct": -7.147571659555399,
+      "kill_days": []
+    },
+    {
+      "label": "margin=40 risk.daily_cap=5",
+      "slug": "margin-40__risk.daily_cap-5",
+      "combo": {
+        "margin": "40",
+        "risk.daily_cap": "5"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=40",
+        "sizing.margin_max=40",
+        "risk.daily_cap=5"
+      ],
+      "net_pnl": -95.96281993534207,
+      "gross_pnl": -73.81849226666672,
+      "unrealized_pnl": 1.4210854715202004e-14,
+      "max_drawdown": 103.46423298914203,
+      "max_drawdown_pct": 10.269388374904155,
+      "entries": 20,
+      "closes": 20,
+      "win_rate": 20.0,
+      "expectancy": -4.798140996767102,
+      "payoff": 1.1974829186810827,
+      "fees": 22.144327668675345,
+      "tp": 3,
+      "sl": 15,
+      "time_stop": 2,
+      "open_at_end": 0,
+      "end_equity": 904.037180064658,
+      "return_pct": -9.596281993534205,
+      "kill_days": []
+    },
+    {
+      "label": "margin=80 risk.daily_cap=20",
+      "slug": "margin-80__risk.daily_cap-20",
+      "combo": {
+        "margin": "80",
+        "risk.daily_cap": "20"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=80",
+        "sizing.margin_max=80",
+        "risk.daily_cap=20"
+      ],
+      "net_pnl": -105.20729019981235,
+      "gross_pnl": 58.3698824589981,
+      "unrealized_pnl": 28.38747789612495,
+      "max_drawdown": 168.57644860284756,
+      "max_drawdown_pct": 16.608470860058162,
+      "entries": 75,
+      "closes": 72,
+      "win_rate": 36.11111111111111,
+      "expectancy": -1.4112123638862824,
+      "payoff": 1.5366636584567392,
+      "fees": 163.57717265881044,
+      "tp": 24,
+      "sl": 44,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 923.1801876963126,
+      "return_pct": -7.68198123036874,
+      "kill_days": [
+        "2026-08-06"
+      ]
+    },
+    {
+      "label": "margin=40 risk.daily_cap=40",
+      "slug": "margin-40__risk.daily_cap-40",
+      "combo": {
+        "margin": "40",
+        "risk.daily_cap": "40"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=40",
+        "sizing.margin_max=40",
+        "risk.daily_cap=40"
+      ],
+      "net_pnl": -112.77693819834562,
+      "gross_pnl": 29.3841337358441,
+      "unrealized_pnl": 7.536565106619349,
+      "max_drawdown": 119.67445902469535,
+      "max_drawdown_pct": 11.878341556063386,
+      "entries": 134,
+      "closes": 129,
+      "win_rate": 35.65891472868217,
+      "expectancy": -0.8509840170414411,
+      "payoff": 1.5213754796688685,
+      "fees": 142.16107193418972,
+      "tp": 44,
+      "sl": 81,
+      "time_stop": 4,
+      "open_at_end": 5,
+      "end_equity": 894.7596269082737,
+      "return_pct": -10.524037309172627,
+      "kill_days": []
+    },
+    {
+      "label": "margin=40 risk.daily_cap=10",
+      "slug": "margin-40__risk.daily_cap-10",
+      "combo": {
+        "margin": "40",
+        "risk.daily_cap": "10"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=40",
+        "sizing.margin_max=40",
+        "risk.daily_cap=10"
+      ],
+      "net_pnl": -148.16541206488617,
+      "gross_pnl": -104.3285285087303,
+      "unrealized_pnl": 5.213978873778302,
+      "max_drawdown": 164.15243568092683,
+      "max_drawdown_pct": 16.29302287362263,
+      "entries": 40,
+      "closes": 38,
+      "win_rate": 23.684210526315788,
+      "expectancy": -3.867510843812792,
+      "payoff": 1.3255272232653115,
+      "fees": 43.836883556155875,
+      "tp": 7,
+      "sl": 28,
+      "time_stop": 3,
+      "open_at_end": 2,
+      "end_equity": 857.0485668088921,
+      "return_pct": -14.295143319110787,
+      "kill_days": []
+    },
+    {
+      "label": "margin=80 risk.daily_cap=5",
+      "slug": "margin-80__risk.daily_cap-5",
+      "combo": {
+        "margin": "80",
+        "risk.daily_cap": "5"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=80",
+        "sizing.margin_max=80",
+        "risk.daily_cap=5"
+      ],
+      "net_pnl": -191.92563987068414,
+      "gross_pnl": -147.63698453333345,
+      "unrealized_pnl": -8.526512829121202e-14,
+      "max_drawdown": 206.92846597828407,
+      "max_drawdown_pct": 20.386984218736323,
+      "entries": 20,
+      "closes": 20,
+      "win_rate": 20.0,
+      "expectancy": -9.596281993534204,
+      "payoff": 1.1974829186810827,
+      "fees": 44.28865533735069,
+      "tp": 3,
+      "sl": 15,
+      "time_stop": 2,
+      "open_at_end": 0,
+      "end_equity": 808.0743601293158,
+      "return_pct": -19.19256398706842,
+      "kill_days": []
+    },
+    {
+      "label": "margin=80 risk.daily_cap=40",
+      "slug": "margin-80__risk.daily_cap-40",
+      "combo": {
+        "margin": "80",
+        "risk.daily_cap": "40"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=80",
+        "sizing.margin_max=80",
+        "risk.daily_cap=40"
+      ],
+      "net_pnl": -244.16593205109908,
+      "gross_pnl": -31.381644866707735,
+      "unrealized_pnl": 11.348583871424722,
+      "max_drawdown": 266.55672320767314,
+      "max_drawdown_pct": 26.066479619754578,
+      "entries": 98,
+      "closes": 95,
+      "win_rate": 32.631578947368425,
+      "expectancy": -2.5322729689589414,
+      "payoff": 1.6041413379617926,
+      "fees": 212.78428718439133,
+      "tp": 30,
+      "sl": 62,
+      "time_stop": 3,
+      "open_at_end": 3,
+      "end_equity": 767.1826518203256,
+      "return_pct": -23.281734817967436,
+      "kill_days": [
+        "2026-08-06",
+        "2026-08-08",
+        "2026-08-09"
+      ]
+    },
+    {
+      "label": "margin=80 risk.daily_cap=10",
+      "slug": "margin-80__risk.daily_cap-10",
+      "combo": {
+        "margin": "80",
+        "risk.daily_cap": "10"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=80",
+        "sizing.margin_max=80",
+        "risk.daily_cap=10"
+      ],
+      "net_pnl": -296.33082412977234,
+      "gross_pnl": -208.6570570174606,
+      "unrealized_pnl": 10.427957747556604,
+      "max_drawdown": 328.30487136185377,
+      "max_drawdown_pct": 32.345217463172894,
+      "entries": 40,
+      "closes": 38,
+      "win_rate": 23.684210526315788,
+      "expectancy": -7.735021687625584,
+      "payoff": 1.3255272232653115,
+      "fees": 87.67376711231175,
+      "tp": 7,
+      "sl": 28,
+      "time_stop": 3,
+      "open_at_end": 2,
+      "end_equity": 714.0971336177843,
+      "return_pct": -28.590286638221574,
+      "kill_days": [
+        "2026-08-08"
+      ]
+    },
+    {
+      "label": "margin=160 risk.daily_cap=10",
+      "slug": "margin-160__risk.daily_cap-10",
+      "combo": {
+        "margin": "160",
+        "risk.daily_cap": "10"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=160",
+        "sizing.margin_max=160",
+        "risk.daily_cap=10"
+      ],
+      "net_pnl": -380.57927974136817,
+      "gross_pnl": -263.2739690666667,
+      "unrealized_pnl": 20.85591549511321,
+      "max_drawdown": 461.8711639223276,
+      "max_drawdown_pct": 44.841614502696785,
+      "entries": 27,
+      "closes": 25,
+      "win_rate": 24.0,
+      "expectancy": -15.03117118965472,
+      "payoff": 1.358739393978859,
+      "fees": 117.30531067470143,
+      "tp": 5,
+      "sl": 18,
+      "time_stop": 2,
+      "open_at_end": 2,
+      "end_equity": 640.276635753745,
+      "return_pct": -35.972336424625496,
+      "kill_days": [
+        "2026-08-06",
+        "2026-08-07",
+        "2026-08-08",
+        "2026-08-09"
+      ]
+    },
+    {
+      "label": "margin=160 risk.daily_cap=20",
+      "slug": "margin-160__risk.daily_cap-20",
+      "combo": {
+        "margin": "160",
+        "risk.daily_cap": "20"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=160",
+        "sizing.margin_max=160",
+        "risk.daily_cap=20"
+      ],
+      "net_pnl": -380.57927974136817,
+      "gross_pnl": -263.2739690666667,
+      "unrealized_pnl": 20.85591549511321,
+      "max_drawdown": 461.8711639223276,
+      "max_drawdown_pct": 44.841614502696785,
+      "entries": 27,
+      "closes": 25,
+      "win_rate": 24.0,
+      "expectancy": -15.03117118965472,
+      "payoff": 1.358739393978859,
+      "fees": 117.30531067470143,
+      "tp": 5,
+      "sl": 18,
+      "time_stop": 2,
+      "open_at_end": 2,
+      "end_equity": 640.276635753745,
+      "return_pct": -35.972336424625496,
+      "kill_days": [
+        "2026-08-06",
+        "2026-08-07",
+        "2026-08-08",
+        "2026-08-09"
+      ]
+    },
+    {
+      "label": "margin=160 risk.daily_cap=40",
+      "slug": "margin-160__risk.daily_cap-40",
+      "combo": {
+        "margin": "160",
+        "risk.daily_cap": "40"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=160",
+        "sizing.margin_max=160",
+        "risk.daily_cap=40"
+      ],
+      "net_pnl": -380.57927974136817,
+      "gross_pnl": -263.2739690666667,
+      "unrealized_pnl": 20.85591549511321,
+      "max_drawdown": 461.8711639223276,
+      "max_drawdown_pct": 44.841614502696785,
+      "entries": 27,
+      "closes": 25,
+      "win_rate": 24.0,
+      "expectancy": -15.03117118965472,
+      "payoff": 1.358739393978859,
+      "fees": 117.30531067470143,
+      "tp": 5,
+      "sl": 18,
+      "time_stop": 2,
+      "open_at_end": 2,
+      "end_equity": 640.276635753745,
+      "return_pct": -35.972336424625496,
+      "kill_days": [
+        "2026-08-06",
+        "2026-08-07",
+        "2026-08-08",
+        "2026-08-09"
+      ]
+    },
+    {
+      "label": "margin=160 risk.daily_cap=5",
+      "slug": "margin-160__risk.daily_cap-5",
+      "combo": {
+        "margin": "160",
+        "risk.daily_cap": "5"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "sizing.margin_min=160",
+        "sizing.margin_max=160",
+        "risk.daily_cap=5"
+      ],
+      "net_pnl": -383.8512797413683,
+      "gross_pnl": -295.2739690666669,
+      "unrealized_pnl": 5.684341886080802e-14,
+      "max_drawdown": 413.8569319565679,
+      "max_drawdown_pct": 40.18006416435669,
+      "entries": 20,
+      "closes": 20,
+      "win_rate": 20.0,
+      "expectancy": -19.192563987068407,
+      "payoff": 1.1974829186810827,
+      "fees": 88.57731067470138,
+      "tp": 3,
+      "sl": 15,
+      "time_stop": 2,
+      "open_at_end": 0,
+      "end_equity": 616.1487202586318,
+      "return_pct": -38.38512797413682,
+      "kill_days": [
+        "2026-08-06",
+        "2026-08-07",
+        "2026-08-08",
+        "2026-08-09"
+      ]
+    }
+  ]
+}

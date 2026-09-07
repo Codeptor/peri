@@ -1,0 +1,206 @@
+{
+  "label": "regime",
+  "from": "2026-08-06 00:00",
+  "to": "2026-08-09 22:01",
+  "from_ms": 1785974400000,
+  "to_ms": 1786312860000,
+  "markets": 271,
+  "bars": 5373,
+  "axes": {
+    "risk.regime_vol_max": [
+      "off",
+      "1.5",
+      "0.0695",
+      "0.0509",
+      "0.0407",
+      "0.0277"
+    ]
+  },
+  "base_overrides": [],
+  "caveats": [
+    "mechanical replay — no analyst judgment, no news: conviction is fixed at 0.75 for every entry and the screener's side_hint is taken as the side (spec Decision 2)",
+    "no review loop: no veto closes, no stop moves, no analyst time-stop — brackets and the horizon are the only exits (spec Decision 5)",
+    "exits: SL is checked before TP inside a candle (a candle touching both is scored as the stop) and fills AT the trigger; the 24h horizon fills at the candle close (spec Decision 5)",
+    "entries fill at the next 1m open plus flat slip (2bp native / 5bp dex); 7.5bp taker fee per side (spec Decision 5)",
+    "day_ntl_vlm is proxied by rolling 24h candle quote volume — the venue does not serve historical dayNtlVlm, and this proxy decides WHICH markets clear the universe filter (spec Decision 4)",
+    "features are computed on 1m candle closes, not the live 1/5s mid tape; trade prints cross the spread, so vol1h runs slightly hotter than live (spec Decision 4)",
+    "open_interest is 0.0 throughout — historical OI is not served (nothing in the screener, sizing or the gates reads it)",
+    "the screener ticks every 1m (live: 45s) — the closest candle-aligned cadence (spec Decision 6)"
+  ],
+  "rows": [
+    {
+      "label": "risk.regime_vol_max=0.0509",
+      "slug": "risk.regime_vol_max-0.0509",
+      "combo": {
+        "risk.regime_vol_max": "0.0509"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.regime_vol_max=0.0509"
+      ],
+      "net_pnl": -71.29860023999555,
+      "gross_pnl": 15.804621329334793,
+      "unrealized_pnl": 14.193738948062503,
+      "max_drawdown": 102.98317944151313,
+      "max_drawdown_pct": 10.221641191486238,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.902579223896046,
+      "payoff": 1.5474585404950534,
+      "fees": 87.10322156933034,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 942.895138708067,
+      "return_pct": -5.7104861291933044,
+      "kill_days": []
+    },
+    {
+      "label": "risk.regime_vol_max=0.0695",
+      "slug": "risk.regime_vol_max-0.0695",
+      "combo": {
+        "risk.regime_vol_max": "0.0695"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.regime_vol_max=0.0695"
+      ],
+      "net_pnl": -71.29860023999555,
+      "gross_pnl": 15.804621329334793,
+      "unrealized_pnl": 14.193738948062503,
+      "max_drawdown": 102.98317944151313,
+      "max_drawdown_pct": 10.221641191486238,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.902579223896046,
+      "payoff": 1.5474585404950534,
+      "fees": 87.10322156933034,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 942.895138708067,
+      "return_pct": -5.7104861291933044,
+      "kill_days": []
+    },
+    {
+      "label": "risk.regime_vol_max=1.5",
+      "slug": "risk.regime_vol_max-1.5",
+      "combo": {
+        "risk.regime_vol_max": "1.5"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.regime_vol_max=1.5"
+      ],
+      "net_pnl": -71.29860023999555,
+      "gross_pnl": 15.804621329334793,
+      "unrealized_pnl": 14.193738948062503,
+      "max_drawdown": 102.98317944151313,
+      "max_drawdown_pct": 10.221641191486238,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.902579223896046,
+      "payoff": 1.5474585404950534,
+      "fees": 87.10322156933034,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 942.895138708067,
+      "return_pct": -5.7104861291933044,
+      "kill_days": []
+    },
+    {
+      "label": "risk.regime_vol_max=off",
+      "slug": "risk.regime_vol_max-off",
+      "combo": {
+        "risk.regime_vol_max": "off"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.regime_vol_max=inf"
+      ],
+      "net_pnl": -71.29860023999555,
+      "gross_pnl": 15.804621329334793,
+      "unrealized_pnl": 14.193738948062503,
+      "max_drawdown": 102.98317944151313,
+      "max_drawdown_pct": 10.221641191486238,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.902579223896046,
+      "payoff": 1.5474585404950534,
+      "fees": 87.10322156933034,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 942.895138708067,
+      "return_pct": -5.7104861291933044,
+      "kill_days": []
+    },
+    {
+      "label": "risk.regime_vol_max=0.0407",
+      "slug": "risk.regime_vol_max-0.0407",
+      "combo": {
+        "risk.regime_vol_max": "0.0407"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.regime_vol_max=0.0407"
+      ],
+      "net_pnl": -71.37910023999562,
+      "gross_pnl": 15.404621329334717,
+      "unrealized_pnl": 14.193738948062546,
+      "max_drawdown": 103.06367944151327,
+      "max_drawdown_pct": 10.229631254721598,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.9036246784415016,
+      "payoff": 1.5461087098647976,
+      "fees": 86.78372156933034,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 942.8146387080669,
+      "return_pct": -5.718536129193308,
+      "kill_days": []
+    },
+    {
+      "label": "risk.regime_vol_max=0.0277",
+      "slug": "risk.regime_vol_max-0.0277",
+      "combo": {
+        "risk.regime_vol_max": "0.0277"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.regime_vol_max=0.0277"
+      ],
+      "net_pnl": -150.47511290702406,
+      "gross_pnl": -64.04245102646873,
+      "unrealized_pnl": 5.7584472146538985,
+      "max_drawdown": 164.9664866142365,
+      "max_drawdown_pct": 16.181656645117513,
+      "entries": 80,
+      "closes": 79,
+      "win_rate": 29.11392405063291,
+      "expectancy": -1.8971533279370145,
+      "payoff": 1.649578194265134,
+      "fees": 86.43266188055533,
+      "tp": 23,
+      "sl": 53,
+      "time_stop": 3,
+      "open_at_end": 1,
+      "end_equity": 855.2833343076298,
+      "return_pct": -14.471666569237016,
+      "kill_days": []
+    }
+  ]
+}

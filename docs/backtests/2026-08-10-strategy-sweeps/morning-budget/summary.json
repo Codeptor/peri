@@ -1,0 +1,178 @@
+{
+  "label": "morning-budget",
+  "from": "2026-08-06 00:00",
+  "to": "2026-08-09 22:08",
+  "from_ms": 1785974400000,
+  "to_ms": 1786313280000,
+  "markets": 271,
+  "bars": 5373,
+  "axes": {
+    "risk.morning_entry_budget": [
+      "20",
+      "12",
+      "6",
+      "3",
+      "0"
+    ]
+  },
+  "base_overrides": [],
+  "caveats": [
+    "mechanical replay — no analyst judgment, no news: conviction is fixed at 0.75 for every entry and the screener's side_hint is taken as the side (spec Decision 2)",
+    "no review loop: no veto closes, no stop moves, no analyst time-stop — brackets and the horizon are the only exits (spec Decision 5)",
+    "exits: SL is checked before TP inside a candle (a candle touching both is scored as the stop) and fills AT the trigger; the 24h horizon fills at the candle close (spec Decision 5)",
+    "entries fill at the next 1m open plus flat slip (2bp native / 5bp dex); 7.5bp taker fee per side (spec Decision 5)",
+    "day_ntl_vlm is proxied by rolling 24h candle quote volume — the venue does not serve historical dayNtlVlm, and this proxy decides WHICH markets clear the universe filter (spec Decision 4)",
+    "features are computed on 1m candle closes, not the live 1/5s mid tape; trade prints cross the spread, so vol1h runs slightly hotter than live (spec Decision 4)",
+    "open_interest is 0.0 throughout — historical OI is not served (nothing in the screener, sizing or the gates reads it)",
+    "the screener ticks every 1m (live: 45s) — the closest candle-aligned cadence (spec Decision 6)"
+  ],
+  "rows": [
+    {
+      "label": "risk.morning_entry_budget=0",
+      "slug": "risk.morning_entry_budget-0",
+      "combo": {
+        "risk.morning_entry_budget": "0"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.morning_entry_budget=0"
+      ],
+      "net_pnl": -59.231650966945026,
+      "gross_pnl": 27.74141130634122,
+      "unrealized_pnl": 6.520886026245407,
+      "max_drawdown": 111.22426870815741,
+      "max_drawdown_pct": 10.704739420848588,
+      "entries": 80,
+      "closes": 78,
+      "win_rate": 35.8974358974359,
+      "expectancy": -0.7439955252172451,
+      "payoff": 1.5460555646605303,
+      "fees": 86.97306227328625,
+      "tp": 27,
+      "sl": 49,
+      "time_stop": 2,
+      "open_at_end": 2,
+      "end_equity": 947.2892350593004,
+      "return_pct": -5.271076494069962,
+      "kill_days": []
+    },
+    {
+      "label": "risk.morning_entry_budget=12",
+      "slug": "risk.morning_entry_budget-12",
+      "combo": {
+        "risk.morning_entry_budget": "12"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.morning_entry_budget=12"
+      ],
+      "net_pnl": -71.29860023999555,
+      "gross_pnl": 15.804621329334793,
+      "unrealized_pnl": 14.193738948062503,
+      "max_drawdown": 102.98317944151313,
+      "max_drawdown_pct": 10.221641191486238,
+      "entries": 80,
+      "closes": 77,
+      "win_rate": 35.064935064935064,
+      "expectancy": -0.902579223896046,
+      "payoff": 1.5474585404950534,
+      "fees": 87.10322156933034,
+      "tp": 25,
+      "sl": 48,
+      "time_stop": 4,
+      "open_at_end": 3,
+      "end_equity": 942.895138708067,
+      "return_pct": -5.7104861291933044,
+      "kill_days": []
+    },
+    {
+      "label": "risk.morning_entry_budget=20",
+      "slug": "risk.morning_entry_budget-20",
+      "combo": {
+        "risk.morning_entry_budget": "20"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.morning_entry_budget=20"
+      ],
+      "net_pnl": -92.39534984270861,
+      "gross_pnl": -7.42653788815425,
+      "unrealized_pnl": 5.213978873778302,
+      "max_drawdown": 109.78921355064892,
+      "max_drawdown_pct": 10.830828321530163,
+      "entries": 80,
+      "closes": 78,
+      "win_rate": 33.33333333333333,
+      "expectancy": -1.1691711518295975,
+      "payoff": 1.5825477895646611,
+      "fees": 84.96881195455435,
+      "tp": 24,
+      "sl": 51,
+      "time_stop": 3,
+      "open_at_end": 2,
+      "end_equity": 912.8186290310697,
+      "return_pct": -8.718137096893031,
+      "kill_days": []
+    },
+    {
+      "label": "risk.morning_entry_budget=3",
+      "slug": "risk.morning_entry_budget-3",
+      "combo": {
+        "risk.morning_entry_budget": "3"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.morning_entry_budget=3"
+      ],
+      "net_pnl": -109.84273897340759,
+      "gross_pnl": -23.322041741765354,
+      "unrealized_pnl": -3.127195962667514,
+      "max_drawdown": 127.39262537056322,
+      "max_drawdown_pct": 12.636911203785889,
+      "entries": 80,
+      "closes": 78,
+      "win_rate": 33.33333333333333,
+      "expectancy": -1.3928556278642017,
+      "payoff": 1.5174787681489994,
+      "fees": 86.52069723164225,
+      "tp": 26,
+      "sl": 50,
+      "time_stop": 2,
+      "open_at_end": 2,
+      "end_equity": 887.0300650639249,
+      "return_pct": -11.29699349360751,
+      "kill_days": []
+    },
+    {
+      "label": "risk.morning_entry_budget=6",
+      "slug": "risk.morning_entry_budget-6",
+      "combo": {
+        "risk.morning_entry_budget": "6"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.morning_entry_budget=6"
+      ],
+      "net_pnl": -242.58128442330963,
+      "gross_pnl": -157.24114786207716,
+      "unrealized_pnl": 5.75844721465387,
+      "max_drawdown": 245.1080781025089,
+      "max_drawdown_pct": 24.328311099790017,
+      "entries": 77,
+      "closes": 76,
+      "win_rate": 25.0,
+      "expectancy": -3.1839642687277583,
+      "payoff": 1.525306819330616,
+      "fees": 85.34013656123247,
+      "tp": 18,
+      "sl": 55,
+      "time_stop": 3,
+      "open_at_end": 1,
+      "end_equity": 763.1771627913442,
+      "return_pct": -23.682283720865577,
+      "kill_days": [
+        "2026-08-06"
+      ]
+    }
+  ]
+}

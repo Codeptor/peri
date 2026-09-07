@@ -1,0 +1,84 @@
+{
+  "label": "cooldown-after-sl",
+  "from": "2026-08-06 00:00",
+  "to": "2026-08-08 23:59",
+  "from_ms": 1785974400000,
+  "to_ms": 1786233540000,
+  "markets": 271,
+  "bars": 4074,
+  "axes": {
+    "risk.cooldown_after_sl_min": [
+      "30",
+      "120"
+    ]
+  },
+  "base_overrides": [],
+  "caveats": [
+    "mechanical replay — no analyst judgment, no news: conviction is fixed at 0.75 for every entry and the screener's side_hint is taken as the side (spec Decision 2)",
+    "no review loop: no veto closes, no stop moves, no analyst time-stop — brackets and the horizon are the only exits (spec Decision 5)",
+    "exits: SL is checked before TP inside a candle (a candle touching both is scored as the stop) and fills AT the trigger; the 24h horizon fills at the candle close (spec Decision 5)",
+    "entries fill at the next 1m open plus flat slip (2bp native / 5bp dex); 7.5bp taker fee per side (spec Decision 5)",
+    "day_ntl_vlm is proxied by rolling 24h candle quote volume — the venue does not serve historical dayNtlVlm, and this proxy decides WHICH markets clear the universe filter (spec Decision 4)",
+    "features are computed on 1m candle closes, not the live 1/5s mid tape; trade prints cross the spread, so vol1h runs slightly hotter than live (spec Decision 4)",
+    "open_interest is 0.0 throughout — historical OI is not served (nothing in the screener, sizing or the gates reads it)",
+    "the screener ticks every 1m (live: 45s) — the closest candle-aligned cadence (spec Decision 6)"
+  ],
+  "rows": [
+    {
+      "label": "risk.cooldown_after_sl_min=120",
+      "slug": "risk.cooldown_after_sl_min-120",
+      "combo": {
+        "risk.cooldown_after_sl_min": "120"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.cooldown_after_sl_min=120"
+      ],
+      "net_pnl": -75.77930715968137,
+      "unrealized_pnl": 10.46483125773716,
+      "max_drawdown": 150.7187014448449,
+      "max_drawdown_pct": 14.210382437860725,
+      "entries": 60,
+      "closes": 57,
+      "win_rate": 33.33333333333333,
+      "expectancy": -1.2978825817487947,
+      "payoff": 1.5421792282050713,
+      "fees": 62.6685074202634,
+      "tp": 19,
+      "sl": 36,
+      "time_stop": 2,
+      "open_at_end": 3,
+      "end_equity": 934.6855240980558,
+      "return_pct": -6.531447590194421,
+      "kill_days": []
+    },
+    {
+      "label": "risk.cooldown_after_sl_min=30",
+      "slug": "risk.cooldown_after_sl_min-30",
+      "combo": {
+        "risk.cooldown_after_sl_min": "30"
+      },
+      "conviction": 0.75,
+      "overrides": [
+        "risk.cooldown_after_sl_min=30"
+      ],
+      "net_pnl": -91.30980127923137,
+      "unrealized_pnl": 10.464831257737174,
+      "max_drawdown": 143.94133796170115,
+      "max_drawdown_pct": 13.862961062761933,
+      "entries": 60,
+      "closes": 57,
+      "win_rate": 31.57894736842105,
+      "expectancy": -1.5703473908637071,
+      "payoff": 1.5945109490606122,
+      "fees": 64.05571388938388,
+      "tp": 18,
+      "sl": 37,
+      "time_stop": 2,
+      "open_at_end": 3,
+      "end_equity": 919.1550299785058,
+      "return_pct": -8.08449700214942,
+      "kill_days": []
+    }
+  ]
+}

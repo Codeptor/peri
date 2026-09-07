@@ -1,0 +1,123 @@
+[server]
+port = 7411
+
+[universe]
+dexs = ["", "xyz"]
+# raised 2026-08-09 after day-1 data: 6 SL hits all in sub-$0.05 low-vlm chop
+min_vlm_native = 2000000.0
+min_vlm_dex = 500000.0
+# majors-only pilot 2026-08-24 — Alpha Arena lesson: LLMs have no edge on memes.
+# Exact native symbol match; empty = off. xyz: equities pass through on min_vlm_dex alone.
+allowlist = ["BTC","ETH","SOL","HYPE","XRP","DOGE","BNB"]
+
+[screener]
+interval_s = 45
+top_k = 15
+min_score = 1.8
+# don't re-decide a fresh skip unless its score jumps
+skip_recheck_min = 15
+skip_recheck_score_jump = 0.5
+
+[sizing]
+bankroll = 1000.0
+vol_ref = 0.4
+margin_min = 10.0
+# HALVED CEILING 50.0 -> 25.0 (2026-08-09, amendment #11, docs/backtests/2026-08-10-strategy-sweeps/).
+# The mechanical edge is unproven: on the only obtainable tape (3.7d — HL retains ~3.6d of 1m
+# candles) net was -71.30 on gross +15.80 against fees of 87.10, i.e. fees are 122% of the loss,
+# and the measured noise floor (~$90 sd per 77-close run) makes every sub-$180 sweep difference
+# unresolvable. This creates no edge; it cuts the burn rate while clean post-funding_z-fix data
+# accumulates. At conviction 0.75 raw margin is $40, so the effective cut is 40 -> 25 (-37.5%),
+# notional $800 -> $500 at 20x. Revisit once >=100 post-fix closes exist.
+margin_max = 25.0
+
+[risk]
+max_concurrent = 0
+# user directive 2026-08-22: position caps removed — margin clamps bound exposure
+global_max_concurrent = 0
+# user directive 2026-08-22: daily cap removed — position caps and margin clamps bound exposure
+daily_cap = 0
+cooldown_min = 30
+kill_switch_pct = 12.0
+# user directive 2026-08-21: paper data collection runs uninterrupted
+kill_enabled = false
+# resumed 2026-08-23 — pre-US-open positioning
+entries_enabled = true
+# data-backed profitable band 0.75-0.80 (T1 analytics); arena measurement phase over
+conviction_min = 0.75
+review_interval_min = 15
+time_stop_hours = 24.0
+# entry staleness gate: refuse NEW entries decided on snapshot state older than this
+# (wedge #1 had the analyst deciding on features frozen since 11:29Z). Reviews/exits are
+# never gated — closing on stale data is safer than being stuck.
+max_feature_age_s = 120
+# churn control (user-locked amendment #9, 2026-08-09): day-1 evidence was 20 entries by
+# 11:30Z with fees at 2x gross edge — the cap was being spent on re-entries into the same
+# few markets, most of them straight after a stop-out.
+# entries per market per UTC day (refusal: PerMarketCap)
+per_market_daily_cap = 3
+# asymmetric cooldown: a market that just STOPPED US OUT waits this long instead of
+# cooldown_min (refusal: Cooldown). TP / veto / time-stop closes keep the 30m window.
+cooldown_after_sl_min = 120
+# max entries taken before 12:00 UTC, so the daily cap can't be burnt in the morning
+# (refusal: Paced)
+morning_entry_budget = 12
+# regime gate: while BTC vol1h exceeds this, NEW entries are refused (refusal: Regime).
+# Reviews/exits are never gated. BTC row (or its features) missing => gate inactive.
+#
+# LEFT DELIBERATELY INERT (2026-08-09, docs/backtests/2026-08-10-strategy-sweeps/regime/).
+# 1.5 sits ~19x above the realized BTC vol1h distribution (max 0.0794% over 5364 minutes), so
+# the gate never fires. Recalibrating it to the MEASURED percentiles was swept and every
+# binding threshold lost: p99 0.0695 and p95 0.0509 are byte-identical to `off` (0 refusals);
+# p90 0.0407 = -71.38 vs off's -71.30; p75 0.0277 = -150.48. The reason is capacity, not
+# regime — daily_cap 20 binds first, so refusing an entry in a hot minute does not REMOVE a
+# trade, it DISPLACES it to a later minute (entries stay at exactly 80 in every run), and the
+# replacements were worse. A number that does nothing beats a number that reshuffles entries.
+# Revisit only on a tape that actually contains a BTC vol regime (this 3.7-day window has none).
+regime_vol_max = 1.5
+# minimum reward:risk for an open that states both brackets (Batch B 2026-08-24, Alpha Arena
+# lesson): tp_pct must be >= 2x stop_pct, else the entry is refused (refusal: MinRR). Decisions
+# omitting either bracket keep the sizer's default bracket and are not refused.
+min_rr = 2.0
+
+[analyst]
+# resumed 2026-08-23
+enabled = true
+base_url = "https://opencode.ai/zen/v1"
+api_key_env = "OPENCODE_ZEN_API_KEY"
+chat_model = "x-preview-f-free"
+# Per-model free-tier tuning (2026-08-25): temperature + token budgets per ATLAS findings
+#  deepseek 1.0 (data analysis variety), mimo 0.7 structure-first, nemotron 0.8 balanced, others 0.7
+#  hy3/mimo 800 to avoid 52% no_json truncation, lightning/laguna 400 to avoid 52% timeouts at 60s
+#  deepseek 100% http_err (175 calls dead) — http status/body now logged via warn; if still 0% next window, set enabled=false
+models = [
+  { id = "x-preview-f-free", api_style = "chat", enabled = true, temperature = 0.7 },
+  { id = "muse-spark-1.2-contributor-free", api_style = "responses", enabled = true, temperature = 0.7 },
+  { id = "big-pickle", api_style = "chat", enabled = true, temperature = 0.7 },
+  { id = "deepseek-v4-flash-free", api_style = "chat", enabled = true, temperature = 1.0 },
+  { id = "hy3-free", api_style = "chat", enabled = true, temperature = 0.7, max_tokens = 800 },
+  { id = "laguna-s-2.1-free", api_style = "chat", enabled = true, temperature = 0.7, max_tokens = 400 },
+  { id = "mimo-v2.5-free", api_style = "chat", enabled = true, temperature = 0.7, max_tokens = 800 },
+  { id = "nemotron-3-ultra-free", api_style = "chat", enabled = true, temperature = 0.8 },
+  { id = "nemotron-3.5-lightning-free", api_style = "chat", enabled = true, temperature = 0.8, max_tokens = 400 },
+]
+# no client-side max_output_tokens (user-locked): server default; 60s/call timeout bounds wall time
+# external Tavily+Exa retrieval replaces hosted muse web_search — user directive 2026-08-21
+web_retrieval = true
+
+[analyst.headers]
+# Required by Zen (verified live 2026-08-22); request/session identities are generated per call.
+"User-Agent" = "opencode/1.15.0 ai-sdk/provider-utils/4.0.23 runtime/bun/1.3.13"
+"x-opencode-client" = "cli"
+"x-opencode-project" = "global"
+
+[news]
+rss = ["https://www.coindesk.com/arc/outboundfeeds/rss/", "https://cointelegraph.com/rss", "https://blockworks.co/feed", "https://www.dlnews.com/arc/outboundfeeds/rss/", "https://decrypt.co/feed", "https://cryptoslate.com/feed/", "https://bitcoinmagazine.com/.rss/full/", "https://feeds.feedburner.com/zerohedge/feed", "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114"]
+tavily_key_env = "TAVILY_API_KEY"
+extra_keywords = {}
+tg_channels = ["WatcherGuru", "TreeNewsFeed", "whale_alert_io", "unfolded", "Cointelegraph", "wublockchainenglish", "infinityhedge", "DDGeopolitics", "cryptoquant_official", "unfolded_defi"]
+tg_signal_groups = [{ id = -1001234567890, slug = "caller_group", senders = ["caller1"] }]
+
+[notify]
+bot_token_env = "TG_BOT_TOKEN"
+chat_id = "123456789"

@@ -1,0 +1,47 @@
+[
+  {
+    "id": 201,
+    "ts": 1786185502236,
+    "source": "tg:crypto_insider",
+    "title": "Tesla beats Q4 deliveries, up 8% AH",
+    "body": "Tesla reported 495k deliveries vs 470k est. Stock +4% premarket. Implications for xyz:TSLA perp funding likely to spike.",
+    "url": "https://t.me/crypto_insider/1234",
+    "markets": [
+      "xyz:TSLA"
+    ]
+  },
+  {
+    "id": 200,
+    "ts": 1786185322236,
+    "source": "rss:coindesk",
+    "title": "ETH funding spikes as longs crowd",
+    "body": "ETH OI up 12% in 24h, funding_z at 2.9. Analysts warn of squeeze.",
+    "url": "https://coindesk.com/eth-funding",
+    "markets": [
+      "ETH",
+      "BTC"
+    ]
+  },
+  {
+    "id": 199,
+    "ts": 1786185022236,
+    "source": "tavily",
+    "title": "Gold steady after CPI print",
+    "body": "XAU holds 2688 despite hotter CPI. Fed path unchanged. Flows muted for xyz:GOLD.",
+    "url": "https://example.com/gold-cpi",
+    "markets": [
+      "xyz:GOLD"
+    ]
+  },
+  {
+    "id": 198,
+    "ts": 1786184722236,
+    "source": "tg:whale_alert",
+    "title": "SOL whale moves $40M to HL",
+    "body": "Large SOL deposit to Hyperliquid, possible selling pressure.",
+    "url": "https://t.me/whale_alert/5678",
+    "markets": [
+      "SOL"
+    ]
+  }
+]

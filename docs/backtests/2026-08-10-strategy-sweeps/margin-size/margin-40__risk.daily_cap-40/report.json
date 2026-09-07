@@ -1,0 +1,2990 @@
+{
+  "params": {
+    "from": "2026-08-06 00:00",
+    "to": "2026-08-09 22:04",
+    "from_ms": 1785974400000,
+    "to_ms": 1786313040000,
+    "conviction": 0.75,
+    "markets": [
+      "0G",
+      "2Z",
+      "AAVE",
+      "ACE",
+      "ADA",
+      "AERO",
+      "AIXBT",
+      "ALGO",
+      "ALT",
+      "ANIME",
+      "APE",
+      "APEX",
+      "APT",
+      "AR",
+      "ARB",
+      "ASTER",
+      "ATOM",
+      "AVAX",
+      "AVNT",
+      "AXS",
+      "AZTEC",
+      "BABY",
+      "BANANA",
+      "BCH",
+      "BERA",
+      "BIGTIME",
+      "BIO",
+      "BLUR",
+      "BNB",
+      "BOME",
+      "BRETT",
+      "BSV",
+      "BTC",
+      "CAKE",
+      "CASHCAT",
+      "CC",
+      "CELO",
+      "CFX",
+      "CHIP",
+      "COMP",
+      "CRV",
+      "DASH",
+      "DOGE",
+      "DOT",
+      "DYDX",
+      "DYM",
+      "EIGEN",
+      "ENA",
+      "ENS",
+      "ETC",
+      "ETH",
+      "ETHFI",
+      "FARTCOIN",
+      "FET",
+      "FIL",
+      "FOGO",
+      "GALA",
+      "GAS",
+      "GMT",
+      "GMX",
+      "GOAT",
+      "GRAM",
+      "GRASS",
+      "GRIFFAIN",
+      "HBAR",
+      "HEMI",
+      "HMSTR",
+      "HYPE",
+      "HYPER",
+      "ICP",
+      "IMX",
+      "INIT",
+      "INJ",
+      "IO",
+      "IOTA",
+      "JTO",
+      "JUP",
+      "KAITO",
+      "KAS",
+      "LAYER",
+      "LDO",
+      "LINEA",
+      "LINK",
+      "LIT",
+      "LTC",
+      "MANTA",
+      "ME",
+      "MEGA",
+      "MELANIA",
+      "MEME",
+      "MERL",
+      "MET",
+      "MINA",
+      "MNT",
+      "MON",
+      "MOODENG",
+      "MORPHO",
+      "MOVE",
+      "NEAR",
+      "NEO",
+      "NIL",
+      "NOT",
+      "NXPC",
+      "ONDO",
+      "OP",
+      "ORDI",
+      "PAXG",
+      "PENDLE",
+      "PENGU",
+      "PEOPLE",
+      "PNUT",
+      "POL",
+      "POLYX",
+      "POPCAT",
+      "PROVE",
+      "PUMP",
+      "PURR",
+      "PYTH",
+      "RENDER",
+      "RESOLV",
+      "REZ",
+      "RSR",
+      "RUNE",
+      "S",
+      "SAGA",
+      "SAND",
+      "SEI",
+      "SKR",
+      "SKY",
+      "SNX",
+      "SOL",
+      "SOPH",
+      "SPX",
+      "STABLE",
+      "STBL",
+      "STRK",
+      "STX",
+      "SUI",
+      "SUPER",
+      "SUSHI",
+      "SYRUP",
+      "TAO",
+      "TIA",
+      "TNSR",
+      "TRB",
+      "TRUMP",
+      "TRX",
+      "TURBO",
+      "UMA",
+      "UNI",
+      "USUAL",
+      "VINE",
+      "VIRTUAL",
+      "VVV",
+      "W",
+      "WCT",
+      "WIF",
+      "WLD",
+      "WLFI",
+      "XAI",
+      "XLM",
+      "XMR",
+      "XPL",
+      "XRP",
+      "YGG",
+      "ZEC",
+      "ZEN",
+      "ZETA",
+      "ZK",
+      "ZORA",
+      "ZRO",
+      "kBONK",
+      "kFLOKI",
+      "kLUNC",
+      "kNEIRO",
+      "kPEPE",
+      "kSHIB",
+      "xyz:AAPL",
+      "xyz:AMAT",
+      "xyz:AMD",
+      "xyz:AMZN",
+      "xyz:ARM",
+      "xyz:ASML",
+      "xyz:AVGO",
+      "xyz:BABA",
+      "xyz:BB",
+      "xyz:BE",
+      "xyz:BIRD",
+      "xyz:BOT",
+      "xyz:BRENTOIL",
+      "xyz:BX",
+      "xyz:CBRS",
+      "xyz:CL",
+      "xyz:COIN",
+      "xyz:COPPER",
+      "xyz:COST",
+      "xyz:CRCL",
+      "xyz:CRWV",
+      "xyz:CXMT",
+      "xyz:DELL",
+      "xyz:DKNG",
+      "xyz:DRAM",
+      "xyz:EBAY",
+      "xyz:EUR",
+      "xyz:EWJ",
+      "xyz:EWT",
+      "xyz:EWY",
+      "xyz:EWZ",
+      "xyz:GBP",
+      "xyz:GEV",
+      "xyz:GIGADEV",
+      "xyz:GME",
+      "xyz:GOLD",
+      "xyz:GOOGL",
+      "xyz:HIMS",
+      "xyz:HOOD",
+      "xyz:HYUNDAI",
+      "xyz:IBM",
+      "xyz:INTC",
+      "xyz:JP225",
+      "xyz:JPY",
+      "xyz:KIOXIA",
+      "xyz:KORU",
+      "xyz:KR200",
+      "xyz:LITE",
+      "xyz:LLY",
+      "xyz:LYTE",
+      "xyz:META",
+      "xyz:MINIMAX",
+      "xyz:MRVL",
+      "xyz:MSFT",
+      "xyz:MSTR",
+      "xyz:MU",
+      "xyz:NATGAS",
+      "xyz:NBIS",
+      "xyz:NCLD",
+      "xyz:NFLX",
+      "xyz:NOK",
+      "xyz:NOW",
+      "xyz:NVDA",
+      "xyz:ORCL",
+      "xyz:PALLADIUM",
+      "xyz:PLATINUM",
+      "xyz:PLTR",
+      "xyz:PURRDAT",
+      "xyz:QCOM",
+      "xyz:QNT",
+      "xyz:RIVN",
+      "xyz:RKLB",
+      "xyz:SHAZ",
+      "xyz:SILVER",
+      "xyz:SKHX",
+      "xyz:SKHY",
+      "xyz:SMH",
+      "xyz:SMSN",
+      "xyz:SNDK",
+      "xyz:SOFTBANK",
+      "xyz:SOXL",
+      "xyz:SP500",
+      "xyz:SPCX",
+      "xyz:STRC",
+      "xyz:TSLA",
+      "xyz:TSM",
+      "xyz:UNITREE",
+      "xyz:URNM",
+      "xyz:USAR",
+      "xyz:WDC",
+      "xyz:XLE",
+      "xyz:XYZ100",
+      "xyz:ZHIPU",
+      "xyz:ZM"
+    ],
+    "overrides": [
+      "sizing.margin_min=40",
+      "sizing.margin_max=40",
+      "risk.daily_cap=40"
+    ],
+    "knobs": {
+      "risk.conviction_min": "0.75",
+      "risk.cooldown_after_sl_min": "120",
+      "risk.cooldown_min": "30",
+      "risk.daily_cap": "40",
+      "risk.kill_switch_pct": "12",
+      "risk.max_concurrent": "5",
+      "risk.morning_entry_budget": "12",
+      "risk.per_market_daily_cap": "3",
+      "risk.regime_vol_max": "1.5",
+      "risk.time_stop_hours": "24",
+      "screener.min_score": "1.8",
+      "screener.top_k": "6",
+      "sizing.bankroll": "1000",
+      "sizing.margin_max": "40",
+      "sizing.margin_min": "40",
+      "sizing.stop_floor_pct": "1",
+      "sizing.tp_mult": "2",
+      "sizing.vol_ref": "0.4",
+      "universe.min_vlm_dex": "500000",
+      "universe.min_vlm_native": "2000000"
+    }
+  },
+  "caveats": [
+    "mechanical replay — no analyst judgment, no news: conviction is fixed at 0.75 for every entry and the screener's side_hint is taken as the side (spec Decision 2)",
+    "no review loop: no veto closes, no stop moves, no analyst time-stop — brackets and the horizon are the only exits (spec Decision 5)",
+    "exits: SL is checked before TP inside a candle (a candle touching both is scored as the stop) and fills AT the trigger; the 24h horizon fills at the candle close (spec Decision 5)",
+    "entries fill at the next 1m open plus flat slip (2bp native / 5bp dex); 7.5bp taker fee per side (spec Decision 5)",
+    "day_ntl_vlm is proxied by rolling 24h candle quote volume — the venue does not serve historical dayNtlVlm, and this proxy decides WHICH markets clear the universe filter (spec Decision 4)",
+    "features are computed on 1m candle closes, not the live 1/5s mid tape; trade prints cross the spread, so vol1h runs slightly hotter than live (spec Decision 4)",
+    "open_interest is 0.0 throughout — historical OI is not served (nothing in the screener, sizing or the gates reads it)",
+    "the screener ticks every 1m (live: 45s) — the closest candle-aligned cadence (spec Decision 6)"
+  ],
+  "summary": {
+    "bars": 5373,
+    "entries": 134,
+    "closes": 129,
+    "unfilled": 0,
+    "gross_pnl": 29.3841337358441,
+    "fees": 142.16107193418972,
+    "net_pnl": -112.77693819834562,
+    "unrealized_pnl": 7.536565106619349,
+    "wins": 46,
+    "losses": 83,
+    "win_rate": 35.65891472868217,
+    "expectancy": -0.8509840170414411,
+    "payoff": 1.5213754796688685,
+    "avg_win": 12.830562552977844,
+    "avg_loss": -8.43352789922081,
+    "start_equity": 1000.0,
+    "end_equity": 894.7596269082737,
+    "return_pct": -10.524037309172627,
+    "max_drawdown": 119.67445902469535,
+    "max_drawdown_pct": 11.878341556063386,
+    "kill_days": []
+  },
+  "exit_mix": {
+    "tp": 44,
+    "sl": 81,
+    "time_stop": 4,
+    "open_at_end": 5
+  },
+  "refusals": {
+    "DailyCap": 1668,
+    "MaxConcurrent": 6080,
+    "Paced": 2680
+  },
+  "per_market": [
+    {
+      "market": "ACE",
+      "entries": 11,
+      "closes": 11,
+      "gross_pnl": 3.418789224914713,
+      "fees": 8.051235908081313,
+      "net_pnl": -4.632446683166604,
+      "wins": 4,
+      "tp": 4,
+      "sl": 7,
+      "time_stop": 0
+    },
+    {
+      "market": "ADA",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -7.9999999999999565,
+      "fees": 1.194,
+      "net_pnl": -9.193999999999956,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "AVAX",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -8.000000000000039,
+      "fees": 1.194,
+      "net_pnl": -9.194000000000038,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "BTC",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -6.024133683108489,
+      "fees": 1.1954818997376688,
+      "net_pnl": -7.219615582846157,
+      "wins": 0,
+      "tp": 0,
+      "sl": 0,
+      "time_stop": 1
+    },
+    {
+      "market": "CASHCAT",
+      "entries": 12,
+      "closes": 12,
+      "gross_pnl": 35.76012984005945,
+      "fees": 10.852290577230288,
+      "net_pnl": 24.90783926282915,
+      "wins": 6,
+      "tp": 6,
+      "sl": 6,
+      "time_stop": 0
+    },
+    {
+      "market": "CRV",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -8.000000000000025,
+      "fees": 1.194,
+      "net_pnl": -9.194000000000024,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "ENA",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": 7.405641416441847,
+      "fees": 1.1944457689376686,
+      "net_pnl": 6.211195647504179,
+      "wins": 1,
+      "tp": 0,
+      "sl": 0,
+      "time_stop": 1
+    },
+    {
+      "market": "FARTCOIN",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -8.000000000000073,
+      "fees": 1.194,
+      "net_pnl": -9.194000000000072,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "KAITO",
+      "entries": 6,
+      "closes": 6,
+      "gross_pnl": 1.2000000000000872,
+      "fees": 6.6471,
+      "net_pnl": -5.447099999999905,
+      "wins": 2,
+      "tp": 2,
+      "sl": 4,
+      "time_stop": 0
+    },
+    {
+      "market": "LIT",
+      "entries": 4,
+      "closes": 4,
+      "gross_pnl": -32.00000000000001,
+      "fees": 4.812,
+      "net_pnl": -36.812000000000005,
+      "wins": 0,
+      "tp": 0,
+      "sl": 4,
+      "time_stop": 0
+    },
+    {
+      "market": "NIL",
+      "entries": 3,
+      "closes": 3,
+      "gross_pnl": -23.999999999999957,
+      "fees": 3.594,
+      "net_pnl": -27.59399999999995,
+      "wins": 0,
+      "tp": 0,
+      "sl": 3,
+      "time_stop": 0
+    },
+    {
+      "market": "PENGU",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -8.000000000000057,
+      "fees": 1.194,
+      "net_pnl": -9.194000000000056,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "PUMP",
+      "entries": 5,
+      "closes": 5,
+      "gross_pnl": 8.400000000000096,
+      "fees": 5.946300000000001,
+      "net_pnl": 2.4537000000000972,
+      "wins": 2,
+      "tp": 2,
+      "sl": 3,
+      "time_stop": 0
+    },
+    {
+      "market": "SAGA",
+      "entries": 2,
+      "closes": 2,
+      "gross_pnl": -16.00000000000001,
+      "fees": 2.412,
+      "net_pnl": -18.41200000000001,
+      "wins": 0,
+      "tp": 0,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "SUI",
+      "entries": 1,
+      "closes": 0,
+      "gross_pnl": 0.0,
+      "fees": 0.6,
+      "net_pnl": -0.6,
+      "wins": 0,
+      "tp": 0,
+      "sl": 0,
+      "time_stop": 0
+    },
+    {
+      "market": "UNI",
+      "entries": 3,
+      "closes": 3,
+      "gross_pnl": 4.440892098500626e-14,
+      "fees": 3.5879999999999996,
+      "net_pnl": -3.587999999999953,
+      "wins": 1,
+      "tp": 1,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "VVV",
+      "entries": 2,
+      "closes": 2,
+      "gross_pnl": -15.999999999999922,
+      "fees": 2.4,
+      "net_pnl": -18.39999999999992,
+      "wins": 0,
+      "tp": 0,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "WLD",
+      "entries": 2,
+      "closes": 2,
+      "gross_pnl": 32.000000000000014,
+      "fees": 2.4,
+      "net_pnl": 29.60000000000002,
+      "wins": 2,
+      "tp": 2,
+      "sl": 0,
+      "time_stop": 0
+    },
+    {
+      "market": "XMR",
+      "entries": 4,
+      "closes": 4,
+      "gross_pnl": 62.4000000000001,
+      "fees": 4.6812000000000005,
+      "net_pnl": 57.7188000000001,
+      "wins": 4,
+      "tp": 4,
+      "sl": 0,
+      "time_stop": 0
+    },
+    {
+      "market": "ZEC",
+      "entries": 1,
+      "closes": 0,
+      "gross_pnl": 0.0,
+      "fees": 0.6,
+      "net_pnl": -0.6,
+      "wins": 0,
+      "tp": 0,
+      "sl": 0,
+      "time_stop": 0
+    },
+    {
+      "market": "kBONK",
+      "entries": 2,
+      "closes": 2,
+      "gross_pnl": 32.00000000000012,
+      "fees": 2.376,
+      "net_pnl": 29.624000000000123,
+      "wins": 2,
+      "tp": 2,
+      "sl": 0,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:ARM",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": 13.600000000000065,
+      "fees": 1.0098,
+      "net_pnl": 12.590200000000065,
+      "wins": 1,
+      "tp": 1,
+      "sl": 0,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:BE",
+      "entries": 3,
+      "closes": 3,
+      "gross_pnl": -3.199999999999978,
+      "fees": 2.8140000000000005,
+      "net_pnl": -6.013999999999976,
+      "wins": 1,
+      "tp": 1,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:BOT",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -8.000000000000032,
+      "fees": 1.194,
+      "net_pnl": -9.194000000000031,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:BRENTOIL",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": 16.000000000000075,
+      "fees": 1.212,
+      "net_pnl": 14.788000000000075,
+      "wins": 1,
+      "tp": 1,
+      "sl": 0,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:CBRS",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": 10.399999999999986,
+      "fees": 0.7722,
+      "net_pnl": 9.627799999999986,
+      "wins": 1,
+      "tp": 1,
+      "sl": 0,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:CL",
+      "entries": 2,
+      "closes": 2,
+      "gross_pnl": -16.000000000000053,
+      "fees": 2.4,
+      "net_pnl": -18.400000000000052,
+      "wins": 0,
+      "tp": 0,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:GIGADEV",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -7.999999999999982,
+      "fees": 1.194,
+      "net_pnl": -9.193999999999981,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:GOOGL",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -8.000000000000014,
+      "fees": 1.194,
+      "net_pnl": -9.194000000000013,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:KIOXIA",
+      "entries": 4,
+      "closes": 4,
+      "gross_pnl": 13.60000000000001,
+      "fees": 4.585800000000001,
+      "net_pnl": 9.01420000000001,
+      "wins": 2,
+      "tp": 2,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:KORU",
+      "entries": 4,
+      "closes": 4,
+      "gross_pnl": 32.800000000000075,
+      "fees": 3.717,
+      "net_pnl": 29.08300000000007,
+      "wins": 3,
+      "tp": 3,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:LITE",
+      "entries": 2,
+      "closes": 1,
+      "gross_pnl": -6.400000000000034,
+      "fees": 1.5552000000000001,
+      "net_pnl": -7.955200000000033,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:LYTE",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -7.999999999999995,
+      "fees": 1.206,
+      "net_pnl": -9.205999999999994,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:MINIMAX",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -4.800000000000039,
+      "fees": 0.7163999999999999,
+      "net_pnl": -5.516400000000039,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:MU",
+      "entries": 4,
+      "closes": 4,
+      "gross_pnl": -32.0000000000001,
+      "fees": 4.811999999999999,
+      "net_pnl": -36.812000000000104,
+      "wins": 0,
+      "tp": 0,
+      "sl": 4,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:NBIS",
+      "entries": 5,
+      "closes": 5,
+      "gross_pnl": 19.683443879534362,
+      "fees": 5.97876258290965,
+      "net_pnl": 13.704681296624711,
+      "wins": 3,
+      "tp": 2,
+      "sl": 2,
+      "time_stop": 1
+    },
+    {
+      "market": "xyz:ORCL",
+      "entries": 2,
+      "closes": 2,
+      "gross_pnl": 7.999999999999961,
+      "fees": 2.3819999999999997,
+      "net_pnl": 5.617999999999963,
+      "wins": 1,
+      "tp": 1,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:PLTR",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": 15.999999999999991,
+      "fees": 1.2119999999999997,
+      "net_pnl": 14.787999999999991,
+      "wins": 1,
+      "tp": 1,
+      "sl": 0,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:QNT",
+      "entries": 3,
+      "closes": 3,
+      "gross_pnl": 0.7999999999999368,
+      "fees": 3.4566000000000003,
+      "net_pnl": -2.656600000000065,
+      "wins": 1,
+      "tp": 1,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:RKLB",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -5.600000000000034,
+      "fees": 0.8358,
+      "net_pnl": -6.435800000000034,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:SHAZ",
+      "entries": 4,
+      "closes": 4,
+      "gross_pnl": 14.799999999999999,
+      "fees": 4.237500000000001,
+      "net_pnl": 10.562499999999998,
+      "wins": 2,
+      "tp": 2,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:SILVER",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -8.000000000000005,
+      "fees": 1.206,
+      "net_pnl": -9.206000000000005,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:SKHX",
+      "entries": 3,
+      "closes": 3,
+      "gross_pnl": -24.000000000000146,
+      "fees": 3.6060000000000003,
+      "net_pnl": -27.606000000000144,
+      "wins": 0,
+      "tp": 0,
+      "sl": 3,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:SKHY",
+      "entries": 3,
+      "closes": 3,
+      "gross_pnl": 8.340263058002154,
+      "fees": 3.4124551972935016,
+      "net_pnl": 4.927807860708654,
+      "wins": 1,
+      "tp": 1,
+      "sl": 1,
+      "time_stop": 1
+    },
+    {
+      "market": "xyz:SMSN",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -7.999999999999958,
+      "fees": 1.194,
+      "net_pnl": -9.193999999999958,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:SNDK",
+      "entries": 4,
+      "closes": 3,
+      "gross_pnl": -1.5999999999999606,
+      "fees": 4.0692,
+      "net_pnl": -5.669199999999961,
+      "wins": 1,
+      "tp": 1,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:SOXL",
+      "entries": 3,
+      "closes": 2,
+      "gross_pnl": -15.999999999999922,
+      "fees": 2.988,
+      "net_pnl": -18.98799999999992,
+      "wins": 0,
+      "tp": 0,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:SPCX",
+      "entries": 2,
+      "closes": 2,
+      "gross_pnl": 4.799999999999967,
+      "fees": 2.1635999999999997,
+      "net_pnl": 2.636399999999968,
+      "wins": 1,
+      "tp": 1,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:UNITREE",
+      "entries": 3,
+      "closes": 3,
+      "gross_pnl": 3.5999999999999375,
+      "fees": 3.0627000000000004,
+      "net_pnl": 0.537299999999937,
+      "wins": 1,
+      "tp": 1,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:USAR",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -7.999999999999996,
+      "fees": 1.206,
+      "net_pnl": -9.205999999999996,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:WDC",
+      "entries": 3,
+      "closes": 3,
+      "gross_pnl": 3.552713678800501e-14,
+      "fees": 3.0479999999999996,
+      "net_pnl": -3.0479999999999645,
+      "wins": 1,
+      "tp": 1,
+      "sl": 2,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:XLE",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -8.000000000000059,
+      "fees": 1.206,
+      "net_pnl": -9.206000000000058,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    },
+    {
+      "market": "xyz:ZHIPU",
+      "entries": 1,
+      "closes": 1,
+      "gross_pnl": -8.000000000000076,
+      "fees": 1.194,
+      "net_pnl": -9.194000000000075,
+      "wins": 0,
+      "tp": 0,
+      "sl": 1,
+      "time_stop": 0
+    }
+  ],
+  "equity_curve": [
+    {
+      "ts": 1785989160000,
+      "equity": 1000.0
+    },
+    {
+      "ts": 1785989820000,
+      "equity": 1000.0
+    },
+    {
+      "ts": 1785990480000,
+      "equity": 1000.0
+    },
+    {
+      "ts": 1785991140000,
+      "equity": 1000.0
+    },
+    {
+      "ts": 1785991800000,
+      "equity": 1000.0
+    },
+    {
+      "ts": 1785992460000,
+      "equity": 1003.0632166759676
+    },
+    {
+      "ts": 1785993120000,
+      "equity": 996.7925853779411
+    },
+    {
+      "ts": 1785993780000,
+      "equity": 1003.4619893363799
+    },
+    {
+      "ts": 1785994440000,
+      "equity": 985.7993108763222
+    },
+    {
+      "ts": 1785995100000,
+      "equity": 987.4497551918815
+    },
+    {
+      "ts": 1785995760000,
+      "equity": 984.8584572270286
+    },
+    {
+      "ts": 1785996420000,
+      "equity": 973.7626149879065
+    },
+    {
+      "ts": 1785997080000,
+      "equity": 970.1645053330249
+    },
+    {
+      "ts": 1785997740000,
+      "equity": 979.3317259496403
+    },
+    {
+      "ts": 1785998400000,
+      "equity": 971.0712802836207
+    },
+    {
+      "ts": 1785999060000,
+      "equity": 972.0115885747349
+    },
+    {
+      "ts": 1785999720000,
+      "equity": 969.6672076249569
+    },
+    {
+      "ts": 1786000380000,
+      "equity": 966.9479119182436
+    },
+    {
+      "ts": 1786001040000,
+      "equity": 965.2290553367105
+    },
+    {
+      "ts": 1786001700000,
+      "equity": 962.4642136557978
+    },
+    {
+      "ts": 1786002360000,
+      "equity": 977.5715186414831
+    },
+    {
+      "ts": 1786003020000,
+      "equity": 980.3042986474186
+    },
+    {
+      "ts": 1786003680000,
+      "equity": 968.346188310366
+    },
+    {
+      "ts": 1786004340000,
+      "equity": 962.4747188760224
+    },
+    {
+      "ts": 1786005000000,
+      "equity": 948.6371972712076
+    },
+    {
+      "ts": 1786005660000,
+      "equity": 950.1966132091483
+    },
+    {
+      "ts": 1786006320000,
+      "equity": 948.4465863417844
+    },
+    {
+      "ts": 1786006980000,
+      "equity": 948.1784301093714
+    },
+    {
+      "ts": 1786007640000,
+      "equity": 947.1074654432607
+    },
+    {
+      "ts": 1786008300000,
+      "equity": 947.1643221095042
+    },
+    {
+      "ts": 1786008960000,
+      "equity": 945.9424301391555
+    },
+    {
+      "ts": 1786009620000,
+      "equity": 949.4120033482926
+    },
+    {
+      "ts": 1786010280000,
+      "equity": 946.3844023413918
+    },
+    {
+      "ts": 1786010940000,
+      "equity": 948.4951664408693
+    },
+    {
+      "ts": 1786011600000,
+      "equity": 950.6230577118074
+    },
+    {
+      "ts": 1786012260000,
+      "equity": 953.0053656742659
+    },
+    {
+      "ts": 1786012920000,
+      "equity": 954.062562768035
+    },
+    {
+      "ts": 1786013580000,
+      "equity": 955.9557194070138
+    },
+    {
+      "ts": 1786014240000,
+      "equity": 952.3848791924778
+    },
+    {
+      "ts": 1786014900000,
+      "equity": 954.2895740118049
+    },
+    {
+      "ts": 1786015560000,
+      "equity": 954.5252442788817
+    },
+    {
+      "ts": 1786016220000,
+      "equity": 952.4183398821951
+    },
+    {
+      "ts": 1786016880000,
+      "equity": 951.5461774263474
+    },
+    {
+      "ts": 1786017540000,
+      "equity": 944.6182628122648
+    },
+    {
+      "ts": 1786018200000,
+      "equity": 943.0739754287375
+    },
+    {
+      "ts": 1786018860000,
+      "equity": 940.9445618416432
+    },
+    {
+      "ts": 1786019520000,
+      "equity": 931.1472602239586
+    },
+    {
+      "ts": 1786020180000,
+      "equity": 925.5241531423097
+    },
+    {
+      "ts": 1786020840000,
+      "equity": 935.1644392815573
+    },
+    {
+      "ts": 1786021500000,
+      "equity": 930.993739900062
+    },
+    {
+      "ts": 1786022160000,
+      "equity": 935.426221562642
+    },
+    {
+      "ts": 1786022820000,
+      "equity": 939.8592486408678
+    },
+    {
+      "ts": 1786023480000,
+      "equity": 931.6281572853372
+    },
+    {
+      "ts": 1786024140000,
+      "equity": 936.2604184327973
+    },
+    {
+      "ts": 1786024800000,
+      "equity": 953.6088664047774
+    },
+    {
+      "ts": 1786025460000,
+      "equity": 954.4104251965039
+    },
+    {
+      "ts": 1786026120000,
+      "equity": 960.5502813721457
+    },
+    {
+      "ts": 1786026780000,
+      "equity": 956.9828732659336
+    },
+    {
+      "ts": 1786027440000,
+      "equity": 951.2992148889778
+    },
+    {
+      "ts": 1786028100000,
+      "equity": 935.5405225741495
+    },
+    {
+      "ts": 1786028760000,
+      "equity": 937.8474470731696
+    },
+    {
+      "ts": 1786029420000,
+      "equity": 945.8401619368685
+    },
+    {
+      "ts": 1786030080000,
+      "equity": 935.4089042928732
+    },
+    {
+      "ts": 1786030740000,
+      "equity": 929.1110463578856
+    },
+    {
+      "ts": 1786031400000,
+      "equity": 931.5247615140697
+    },
+    {
+      "ts": 1786032060000,
+      "equity": 935.1240089462452
+    },
+    {
+      "ts": 1786032720000,
+      "equity": 931.3504457464181
+    },
+    {
+      "ts": 1786033380000,
+      "equity": 936.3138294143512
+    },
+    {
+      "ts": 1786034040000,
+      "equity": 943.7634729608435
+    },
+    {
+      "ts": 1786034700000,
+      "equity": 939.5807889351483
+    },
+    {
+      "ts": 1786035360000,
+      "equity": 940.003327716536
+    },
+    {
+      "ts": 1786036020000,
+      "equity": 938.1456041604355
+    },
+    {
+      "ts": 1786036680000,
+      "equity": 930.9982106709908
+    },
+    {
+      "ts": 1786037340000,
+      "equity": 935.2766853375628
+    },
+    {
+      "ts": 1786038000000,
+      "equity": 940.4924364782989
+    },
+    {
+      "ts": 1786038660000,
+      "equity": 926.3123913788367
+    },
+    {
+      "ts": 1786039320000,
+      "equity": 937.2240166411912
+    },
+    {
+      "ts": 1786039980000,
+      "equity": 947.5392722312782
+    },
+    {
+      "ts": 1786040640000,
+      "equity": 927.8385596457474
+    },
+    {
+      "ts": 1786041300000,
+      "equity": 939.7894640087599
+    },
+    {
+      "ts": 1786041960000,
+      "equity": 934.677320896256
+    },
+    {
+      "ts": 1786042620000,
+      "equity": 930.9316735002737
+    },
+    {
+      "ts": 1786043280000,
+      "equity": 912.2759881895686
+    },
+    {
+      "ts": 1786043940000,
+      "equity": 930.1534399183158
+    },
+    {
+      "ts": 1786044600000,
+      "equity": 926.9889143106982
+    },
+    {
+      "ts": 1786045260000,
+      "equity": 946.748633649032
+    },
+    {
+      "ts": 1786045920000,
+      "equity": 954.9721258742936
+    },
+    {
+      "ts": 1786046580000,
+      "equity": 962.5717363708181
+    },
+    {
+      "ts": 1786047240000,
+      "equity": 962.4975705254781
+    },
+    {
+      "ts": 1786047900000,
+      "equity": 963.9510761643917
+    },
+    {
+      "ts": 1786048560000,
+      "equity": 961.1422727584068
+    },
+    {
+      "ts": 1786049220000,
+      "equity": 960.4848673059696
+    },
+    {
+      "ts": 1786049880000,
+      "equity": 958.6059049871533
+    },
+    {
+      "ts": 1786050540000,
+      "equity": 956.6402669371394
+    },
+    {
+      "ts": 1786051200000,
+      "equity": 956.9425759175332
+    },
+    {
+      "ts": 1786051860000,
+      "equity": 956.2837047798263
+    },
+    {
+      "ts": 1786052520000,
+      "equity": 956.1042688366393
+    },
+    {
+      "ts": 1786053180000,
+      "equity": 956.6998715358621
+    },
+    {
+      "ts": 1786053840000,
+      "equity": 958.2885575953534
+    },
+    {
+      "ts": 1786054500000,
+      "equity": 954.0714170385625
+    },
+    {
+      "ts": 1786055160000,
+      "equity": 954.525025936601
+    },
+    {
+      "ts": 1786055820000,
+      "equity": 955.481027749074
+    },
+    {
+      "ts": 1786056480000,
+      "equity": 953.2355756720641
+    },
+    {
+      "ts": 1786057140000,
+      "equity": 952.9025412423366
+    },
+    {
+      "ts": 1786057800000,
+      "equity": 956.242097279391
+    },
+    {
+      "ts": 1786058460000,
+      "equity": 953.3154323640431
+    },
+    {
+      "ts": 1786059120000,
+      "equity": 952.1280939340286
+    },
+    {
+      "ts": 1786059780000,
+      "equity": 951.3823589609096
+    },
+    {
+      "ts": 1786060440000,
+      "equity": 952.4073646070963
+    },
+    {
+      "ts": 1786061100000,
+      "equity": 944.6788136643162
+    },
+    {
+      "ts": 1786061760000,
+      "equity": 948.9274755648512
+    },
+    {
+      "ts": 1786062420000,
+      "equity": 949.7776809114188
+    },
+    {
+      "ts": 1786063080000,
+      "equity": 962.6059099096972
+    },
+    {
+      "ts": 1786063740000,
+      "equity": 980.0919016757276
+    },
+    {
+      "ts": 1786064400000,
+      "equity": 955.2173585570708
+    },
+    {
+      "ts": 1786065060000,
+      "equity": 969.5485756454804
+    },
+    {
+      "ts": 1786065720000,
+      "equity": 984.7217071282988
+    },
+    {
+      "ts": 1786066380000,
+      "equity": 971.5651554307364
+    },
+    {
+      "ts": 1786067040000,
+      "equity": 985.1695372680181
+    },
+    {
+      "ts": 1786067700000,
+      "equity": 984.2923202250794
+    },
+    {
+      "ts": 1786068360000,
+      "equity": 977.8028173732275
+    },
+    {
+      "ts": 1786069020000,
+      "equity": 974.7045438732379
+    },
+    {
+      "ts": 1786069680000,
+      "equity": 975.0179228321637
+    },
+    {
+      "ts": 1786070340000,
+      "equity": 976.7155294865797
+    },
+    {
+      "ts": 1786071000000,
+      "equity": 974.7850831802729
+    },
+    {
+      "ts": 1786071660000,
+      "equity": 974.9838650862595
+    },
+    {
+      "ts": 1786072320000,
+      "equity": 974.652950191735
+    },
+    {
+      "ts": 1786072980000,
+      "equity": 979.0895873049278
+    },
+    {
+      "ts": 1786073640000,
+      "equity": 976.9397509156333
+    },
+    {
+      "ts": 1786074300000,
+      "equity": 977.2037431557202
+    },
+    {
+      "ts": 1786074960000,
+      "equity": 980.2750541750553
+    },
+    {
+      "ts": 1786075620000,
+      "equity": 977.4758173989364
+    },
+    {
+      "ts": 1786076280000,
+      "equity": 978.7422561681302
+    },
+    {
+      "ts": 1786076940000,
+      "equity": 973.031455559464
+    },
+    {
+      "ts": 1786077600000,
+      "equity": 978.3634125956336
+    },
+    {
+      "ts": 1786078260000,
+      "equity": 981.5368375842637
+    },
+    {
+      "ts": 1786078920000,
+      "equity": 977.3094607717289
+    },
+    {
+      "ts": 1786079580000,
+      "equity": 976.0356586359061
+    },
+    {
+      "ts": 1786080240000,
+      "equity": 976.723769342969
+    },
+    {
+      "ts": 1786080900000,
+      "equity": 972.0321011624412
+    },
+    {
+      "ts": 1786081560000,
+      "equity": 972.6882111025596
+    },
+    {
+      "ts": 1786082220000,
+      "equity": 971.5916985998961
+    },
+    {
+      "ts": 1786082880000,
+      "equity": 970.2165640678671
+    },
+    {
+      "ts": 1786083540000,
+      "equity": 970.225551875266
+    },
+    {
+      "ts": 1786084200000,
+      "equity": 970.1266859938783
+    },
+    {
+      "ts": 1786084860000,
+      "equity": 974.4677969675382
+    },
+    {
+      "ts": 1786085520000,
+      "equity": 979.0156275113727
+    },
+    {
+      "ts": 1786086180000,
+      "equity": 977.8562003569169
+    },
+    {
+      "ts": 1786086840000,
+      "equity": 972.0590645846379
+    },
+    {
+      "ts": 1786087500000,
+      "equity": 973.7038333386333
+    },
+    {
+      "ts": 1786088160000,
+      "equity": 974.9980776040724
+    },
+    {
+      "ts": 1786088820000,
+      "equity": 973.0117721689194
+    },
+    {
+      "ts": 1786089480000,
+      "equity": 970.8816618153844
+    },
+    {
+      "ts": 1786090140000,
+      "equity": 968.1763317883208
+    },
+    {
+      "ts": 1786090800000,
+      "equity": 966.7203069897018
+    },
+    {
+      "ts": 1786091460000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786092120000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786092780000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786093440000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786094100000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786094760000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786095420000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786096080000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786096740000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786097400000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786098060000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786098720000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786099380000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786100040000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786100700000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786101360000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786102020000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786102680000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786103340000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786104000000,
+      "equity": 962.9185327152042
+    },
+    {
+      "ts": 1786104660000,
+      "equity": 960.2884192065119
+    },
+    {
+      "ts": 1786105320000,
+      "equity": 960.1167807917437
+    },
+    {
+      "ts": 1786105980000,
+      "equity": 962.9818772827869
+    },
+    {
+      "ts": 1786106640000,
+      "equity": 973.9496509121238
+    },
+    {
+      "ts": 1786107300000,
+      "equity": 970.2766894591414
+    },
+    {
+      "ts": 1786107960000,
+      "equity": 973.4117449360896
+    },
+    {
+      "ts": 1786108620000,
+      "equity": 961.3892953499985
+    },
+    {
+      "ts": 1786109280000,
+      "equity": 962.5133035604734
+    },
+    {
+      "ts": 1786109940000,
+      "equity": 934.1748266259721
+    },
+    {
+      "ts": 1786110600000,
+      "equity": 934.1605365115221
+    },
+    {
+      "ts": 1786111260000,
+      "equity": 958.8887661135983
+    },
+    {
+      "ts": 1786111920000,
+      "equity": 994.0762338620892
+    },
+    {
+      "ts": 1786112580000,
+      "equity": 968.2562163819565
+    },
+    {
+      "ts": 1786113240000,
+      "equity": 970.9025513053483
+    },
+    {
+      "ts": 1786113900000,
+      "equity": 979.8714877698615
+    },
+    {
+      "ts": 1786114560000,
+      "equity": 982.0300876183617
+    },
+    {
+      "ts": 1786115220000,
+      "equity": 976.1134144941963
+    },
+    {
+      "ts": 1786115880000,
+      "equity": 972.1570015329933
+    },
+    {
+      "ts": 1786116540000,
+      "equity": 965.3615959592053
+    },
+    {
+      "ts": 1786117200000,
+      "equity": 966.9833228177508
+    },
+    {
+      "ts": 1786117860000,
+      "equity": 970.8754672782603
+    },
+    {
+      "ts": 1786118520000,
+      "equity": 972.4971941368059
+    },
+    {
+      "ts": 1786119180000,
+      "equity": 966.3346320743326
+    },
+    {
+      "ts": 1786119840000,
+      "equity": 966.6589774460417
+    },
+    {
+      "ts": 1786120500000,
+      "equity": 968.2807043045873
+    },
+    {
+      "ts": 1786121160000,
+      "equity": 971.1998126499694
+    },
+    {
+      "ts": 1786121820000,
+      "equity": 978.9841015709884
+    },
+    {
+      "ts": 1786122480000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786123140000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786123800000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786124460000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786125120000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786125780000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786126440000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786127100000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786127760000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786128420000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786129080000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786129740000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786130400000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786131060000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786131720000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786132380000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786133040000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786133700000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786134360000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786135020000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786135680000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786136340000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786137000000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786137660000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786138320000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786138980000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786139640000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786140300000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786140960000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786141620000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786142280000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786142940000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786143600000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786144260000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786144920000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786145580000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786146240000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786146900000,
+      "equity": 980.6092825938974
+    },
+    {
+      "ts": 1786147560000,
+      "equity": 945.9538249505395
+    },
+    {
+      "ts": 1786148220000,
+      "equity": 941.6215172168954
+    },
+    {
+      "ts": 1786148880000,
+      "equity": 942.101207141507
+    },
+    {
+      "ts": 1786149540000,
+      "equity": 945.1896674815755
+    },
+    {
+      "ts": 1786150200000,
+      "equity": 948.4073261576625
+    },
+    {
+      "ts": 1786150860000,
+      "equity": 946.8012973566
+    },
+    {
+      "ts": 1786151520000,
+      "equity": 953.20679717878
+    },
+    {
+      "ts": 1786152180000,
+      "equity": 955.8655745431521
+    },
+    {
+      "ts": 1786152840000,
+      "equity": 952.2141155426589
+    },
+    {
+      "ts": 1786153500000,
+      "equity": 961.9339240702355
+    },
+    {
+      "ts": 1786154160000,
+      "equity": 957.6419577874217
+    },
+    {
+      "ts": 1786154820000,
+      "equity": 959.10715941725
+    },
+    {
+      "ts": 1786155480000,
+      "equity": 957.886232018175
+    },
+    {
+      "ts": 1786156140000,
+      "equity": 953.939956058216
+    },
+    {
+      "ts": 1786156800000,
+      "equity": 951.3077687499904
+    },
+    {
+      "ts": 1786157460000,
+      "equity": 947.2937293298342
+    },
+    {
+      "ts": 1786158120000,
+      "equity": 947.2079162421782
+    },
+    {
+      "ts": 1786158780000,
+      "equity": 935.4777782786838
+    },
+    {
+      "ts": 1786159440000,
+      "equity": 929.7544544206033
+    },
+    {
+      "ts": 1786160100000,
+      "equity": 943.5025984841587
+    },
+    {
+      "ts": 1786160760000,
+      "equity": 943.2118732769297
+    },
+    {
+      "ts": 1786161420000,
+      "equity": 941.7160577053335
+    },
+    {
+      "ts": 1786162080000,
+      "equity": 941.6579945872517
+    },
+    {
+      "ts": 1786162740000,
+      "equity": 940.2330419638845
+    },
+    {
+      "ts": 1786163400000,
+      "equity": 938.740531445478
+    },
+    {
+      "ts": 1786164060000,
+      "equity": 936.1000137074185
+    },
+    {
+      "ts": 1786164720000,
+      "equity": 934.1805067722541
+    },
+    {
+      "ts": 1786165380000,
+      "equity": 935.2082004195172
+    },
+    {
+      "ts": 1786166040000,
+      "equity": 933.3206773098601
+    },
+    {
+      "ts": 1786166700000,
+      "equity": 934.2390251010222
+    },
+    {
+      "ts": 1786167360000,
+      "equity": 934.9921448893432
+    },
+    {
+      "ts": 1786168020000,
+      "equity": 939.2135568160154
+    },
+    {
+      "ts": 1786168680000,
+      "equity": 940.5301038244218
+    },
+    {
+      "ts": 1786169340000,
+      "equity": 937.9244248058881
+    },
+    {
+      "ts": 1786170000000,
+      "equity": 936.6851580810286
+    },
+    {
+      "ts": 1786170660000,
+      "equity": 934.157179413828
+    },
+    {
+      "ts": 1786171320000,
+      "equity": 935.6744843563812
+    },
+    {
+      "ts": 1786171980000,
+      "equity": 937.889281090702
+    },
+    {
+      "ts": 1786172640000,
+      "equity": 939.1282835219316
+    },
+    {
+      "ts": 1786173300000,
+      "equity": 939.4350665530649
+    },
+    {
+      "ts": 1786173960000,
+      "equity": 936.6336814749814
+    },
+    {
+      "ts": 1786174620000,
+      "equity": 939.3790892635798
+    },
+    {
+      "ts": 1786175280000,
+      "equity": 937.5619300033259
+    },
+    {
+      "ts": 1786175940000,
+      "equity": 938.1628339164815
+    },
+    {
+      "ts": 1786176600000,
+      "equity": 943.431097612369
+    },
+    {
+      "ts": 1786177260000,
+      "equity": 943.0970327842914
+    },
+    {
+      "ts": 1786177920000,
+      "equity": 943.2001811977767
+    },
+    {
+      "ts": 1786178580000,
+      "equity": 941.1413167597915
+    },
+    {
+      "ts": 1786179240000,
+      "equity": 944.3689189770015
+    },
+    {
+      "ts": 1786179900000,
+      "equity": 944.4547988750847
+    },
+    {
+      "ts": 1786180560000,
+      "equity": 944.0219598802782
+    },
+    {
+      "ts": 1786181220000,
+      "equity": 945.7951981167763
+    },
+    {
+      "ts": 1786181880000,
+      "equity": 945.1509914704186
+    },
+    {
+      "ts": 1786182540000,
+      "equity": 945.6205885106298
+    },
+    {
+      "ts": 1786183200000,
+      "equity": 941.9615129262808
+    },
+    {
+      "ts": 1786183860000,
+      "equity": 939.624083039895
+    },
+    {
+      "ts": 1786184520000,
+      "equity": 941.0075135750641
+    },
+    {
+      "ts": 1786185180000,
+      "equity": 942.5905709141197
+    },
+    {
+      "ts": 1786185840000,
+      "equity": 942.0318983822555
+    },
+    {
+      "ts": 1786186500000,
+      "equity": 942.6874315842838
+    },
+    {
+      "ts": 1786187160000,
+      "equity": 943.3893139968939
+    },
+    {
+      "ts": 1786187820000,
+      "equity": 948.4847789847408
+    },
+    {
+      "ts": 1786188480000,
+      "equity": 949.8428184932629
+    },
+    {
+      "ts": 1786189140000,
+      "equity": 947.3644784802794
+    },
+    {
+      "ts": 1786189800000,
+      "equity": 945.0854625445696
+    },
+    {
+      "ts": 1786190460000,
+      "equity": 950.0356947431156
+    },
+    {
+      "ts": 1786191120000,
+      "equity": 952.818572544759
+    },
+    {
+      "ts": 1786191780000,
+      "equity": 960.063380904377
+    },
+    {
+      "ts": 1786192440000,
+      "equity": 952.6206193046858
+    },
+    {
+      "ts": 1786193100000,
+      "equity": 963.9177620307382
+    },
+    {
+      "ts": 1786193760000,
+      "equity": 960.5696313961715
+    },
+    {
+      "ts": 1786194420000,
+      "equity": 957.5062409801233
+    },
+    {
+      "ts": 1786195080000,
+      "equity": 944.8132664604713
+    },
+    {
+      "ts": 1786195740000,
+      "equity": 943.0270844814867
+    },
+    {
+      "ts": 1786196400000,
+      "equity": 943.1514071476496
+    },
+    {
+      "ts": 1786197060000,
+      "equity": 943.6578127054854
+    },
+    {
+      "ts": 1786197720000,
+      "equity": 949.1294560684175
+    },
+    {
+      "ts": 1786198380000,
+      "equity": 938.4255643520333
+    },
+    {
+      "ts": 1786199040000,
+      "equity": 949.4392551300805
+    },
+    {
+      "ts": 1786199700000,
+      "equity": 943.4790653158537
+    },
+    {
+      "ts": 1786200360000,
+      "equity": 943.3644780279748
+    },
+    {
+      "ts": 1786201020000,
+      "equity": 943.5708146891565
+    },
+    {
+      "ts": 1786201680000,
+      "equity": 943.9991862653852
+    },
+    {
+      "ts": 1786202340000,
+      "equity": 945.0005352725809
+    },
+    {
+      "ts": 1786203000000,
+      "equity": 947.237068278793
+    },
+    {
+      "ts": 1786203660000,
+      "equity": 945.6705657574114
+    },
+    {
+      "ts": 1786204320000,
+      "equity": 945.2918401633176
+    },
+    {
+      "ts": 1786204980000,
+      "equity": 946.1434916258181
+    },
+    {
+      "ts": 1786205640000,
+      "equity": 947.850778689745
+    },
+    {
+      "ts": 1786206300000,
+      "equity": 952.7456702730896
+    },
+    {
+      "ts": 1786206960000,
+      "equity": 958.1981792297854
+    },
+    {
+      "ts": 1786207620000,
+      "equity": 955.5508643782156
+    },
+    {
+      "ts": 1786208280000,
+      "equity": 957.8217839647351
+    },
+    {
+      "ts": 1786208940000,
+      "equity": 940.7486751467862
+    },
+    {
+      "ts": 1786209600000,
+      "equity": 939.3240591418596
+    },
+    {
+      "ts": 1786210260000,
+      "equity": 940.9573877193034
+    },
+    {
+      "ts": 1786210920000,
+      "equity": 941.635944777775
+    },
+    {
+      "ts": 1786211580000,
+      "equity": 942.526735620207
+    },
+    {
+      "ts": 1786212240000,
+      "equity": 940.0033281165415
+    },
+    {
+      "ts": 1786212900000,
+      "equity": 940.3300519065449
+    },
+    {
+      "ts": 1786213560000,
+      "equity": 940.9684315369506
+    },
+    {
+      "ts": 1786214220000,
+      "equity": 938.5844723649069
+    },
+    {
+      "ts": 1786214880000,
+      "equity": 937.8931995757014
+    },
+    {
+      "ts": 1786215540000,
+      "equity": 937.6711739804924
+    },
+    {
+      "ts": 1786216200000,
+      "equity": 940.0160797714569
+    },
+    {
+      "ts": 1786216860000,
+      "equity": 943.7192308883014
+    },
+    {
+      "ts": 1786217520000,
+      "equity": 943.6307457448853
+    },
+    {
+      "ts": 1786218180000,
+      "equity": 946.9888663303303
+    },
+    {
+      "ts": 1786218840000,
+      "equity": 945.9778822775443
+    },
+    {
+      "ts": 1786219500000,
+      "equity": 945.9384289138276
+    },
+    {
+      "ts": 1786220160000,
+      "equity": 945.2265033273451
+    },
+    {
+      "ts": 1786220820000,
+      "equity": 944.4153519444224
+    },
+    {
+      "ts": 1786221480000,
+      "equity": 945.0982423379397
+    },
+    {
+      "ts": 1786222140000,
+      "equity": 944.641097794903
+    },
+    {
+      "ts": 1786222800000,
+      "equity": 944.7725261814023
+    },
+    {
+      "ts": 1786223460000,
+      "equity": 943.2655174587094
+    },
+    {
+      "ts": 1786224120000,
+      "equity": 940.0574429686147
+    },
+    {
+      "ts": 1786224780000,
+      "equity": 938.9105714580552
+    },
+    {
+      "ts": 1786225440000,
+      "equity": 940.5570511411604
+    },
+    {
+      "ts": 1786226100000,
+      "equity": 941.0481246560896
+    },
+    {
+      "ts": 1786226760000,
+      "equity": 939.5184727372816
+    },
+    {
+      "ts": 1786227420000,
+      "equity": 938.9637194561034
+    },
+    {
+      "ts": 1786228080000,
+      "equity": 938.1260409064007
+    },
+    {
+      "ts": 1786228740000,
+      "equity": 943.6451992329884
+    },
+    {
+      "ts": 1786229400000,
+      "equity": 947.0875435527898
+    },
+    {
+      "ts": 1786230060000,
+      "equity": 947.4342532690013
+    },
+    {
+      "ts": 1786230720000,
+      "equity": 944.1516128857243
+    },
+    {
+      "ts": 1786231380000,
+      "equity": 943.9504584750271
+    },
+    {
+      "ts": 1786232040000,
+      "equity": 940.5153698849934
+    },
+    {
+      "ts": 1786232700000,
+      "equity": 934.5736587525201
+    },
+    {
+      "ts": 1786233360000,
+      "equity": 936.0613402912539
+    },
+    {
+      "ts": 1786234020000,
+      "equity": 929.3689796350097
+    },
+    {
+      "ts": 1786234680000,
+      "equity": 917.0024788860578
+    },
+    {
+      "ts": 1786235340000,
+      "equity": 910.618890742839
+    },
+    {
+      "ts": 1786236000000,
+      "equity": 909.9041095555738
+    },
+    {
+      "ts": 1786236660000,
+      "equity": 906.4491768113498
+    },
+    {
+      "ts": 1786237320000,
+      "equity": 908.3643290315885
+    },
+    {
+      "ts": 1786237980000,
+      "equity": 907.13040593719
+    },
+    {
+      "ts": 1786238640000,
+      "equity": 912.2848054839559
+    },
+    {
+      "ts": 1786239300000,
+      "equity": 912.203835572803
+    },
+    {
+      "ts": 1786239960000,
+      "equity": 913.9082961661184
+    },
+    {
+      "ts": 1786240620000,
+      "equity": 911.158787619974
+    },
+    {
+      "ts": 1786241280000,
+      "equity": 909.5303334917813
+    },
+    {
+      "ts": 1786241940000,
+      "equity": 908.7938859600248
+    },
+    {
+      "ts": 1786242600000,
+      "equity": 906.9894824605583
+    },
+    {
+      "ts": 1786243260000,
+      "equity": 906.0854005347209
+    },
+    {
+      "ts": 1786243920000,
+      "equity": 905.8812803235631
+    },
+    {
+      "ts": 1786244580000,
+      "equity": 910.672767137981
+    },
+    {
+      "ts": 1786245240000,
+      "equity": 913.0054710856349
+    },
+    {
+      "ts": 1786245900000,
+      "equity": 915.6894644637257
+    },
+    {
+      "ts": 1786246560000,
+      "equity": 917.4153164064976
+    },
+    {
+      "ts": 1786247220000,
+      "equity": 918.9320860841339
+    },
+    {
+      "ts": 1786247880000,
+      "equity": 920.813320543845
+    },
+    {
+      "ts": 1786248540000,
+      "equity": 920.7112168833474
+    },
+    {
+      "ts": 1786249200000,
+      "equity": 921.38538238452
+    },
+    {
+      "ts": 1786249860000,
+      "equity": 924.4571881410252
+    },
+    {
+      "ts": 1786250520000,
+      "equity": 925.1589911648433
+    },
+    {
+      "ts": 1786251180000,
+      "equity": 923.7323364748506
+    },
+    {
+      "ts": 1786251840000,
+      "equity": 922.6377138515303
+    },
+    {
+      "ts": 1786252500000,
+      "equity": 923.7393044563861
+    },
+    {
+      "ts": 1786253160000,
+      "equity": 920.677530370441
+    },
+    {
+      "ts": 1786253820000,
+      "equity": 919.0938378583172
+    },
+    {
+      "ts": 1786254480000,
+      "equity": 916.1766337048722
+    },
+    {
+      "ts": 1786255140000,
+      "equity": 916.4579095202168
+    },
+    {
+      "ts": 1786255800000,
+      "equity": 914.0735468865529
+    },
+    {
+      "ts": 1786256460000,
+      "equity": 913.5039239925044
+    },
+    {
+      "ts": 1786257120000,
+      "equity": 911.9509187319467
+    },
+    {
+      "ts": 1786257780000,
+      "equity": 909.0905450647053
+    },
+    {
+      "ts": 1786258440000,
+      "equity": 910.1413637450115
+    },
+    {
+      "ts": 1786259100000,
+      "equity": 910.7447576516406
+    },
+    {
+      "ts": 1786259760000,
+      "equity": 908.0430981477684
+    },
+    {
+      "ts": 1786260420000,
+      "equity": 910.1501138577174
+    },
+    {
+      "ts": 1786261080000,
+      "equity": 904.596738431826
+    },
+    {
+      "ts": 1786261740000,
+      "equity": 906.0633235106983
+    },
+    {
+      "ts": 1786262400000,
+      "equity": 904.8594327259136
+    },
+    {
+      "ts": 1786263060000,
+      "equity": 906.7360329263139
+    },
+    {
+      "ts": 1786263720000,
+      "equity": 909.8585573271425
+    },
+    {
+      "ts": 1786264380000,
+      "equity": 912.2026824874443
+    },
+    {
+      "ts": 1786265040000,
+      "equity": 914.816438706198
+    },
+    {
+      "ts": 1786265700000,
+      "equity": 914.6285635396365
+    },
+    {
+      "ts": 1786266360000,
+      "equity": 918.2926985357615
+    },
+    {
+      "ts": 1786267020000,
+      "equity": 916.784846146074
+    },
+    {
+      "ts": 1786267680000,
+      "equity": 917.7995759403408
+    },
+    {
+      "ts": 1786268340000,
+      "equity": 917.9041879875787
+    },
+    {
+      "ts": 1786269000000,
+      "equity": 917.5611411988795
+    },
+    {
+      "ts": 1786269660000,
+      "equity": 918.284825519883
+    },
+    {
+      "ts": 1786270320000,
+      "equity": 919.5664076051863
+    },
+    {
+      "ts": 1786270980000,
+      "equity": 919.4071682661777
+    },
+    {
+      "ts": 1786271640000,
+      "equity": 918.8792472976163
+    },
+    {
+      "ts": 1786272300000,
+      "equity": 915.4897395861267
+    },
+    {
+      "ts": 1786272960000,
+      "equity": 916.6568687590703
+    },
+    {
+      "ts": 1786273620000,
+      "equity": 918.2808711480149
+    },
+    {
+      "ts": 1786274280000,
+      "equity": 914.1288309177379
+    },
+    {
+      "ts": 1786274940000,
+      "equity": 913.8041499944018
+    },
+    {
+      "ts": 1786275600000,
+      "equity": 915.8978010431605
+    },
+    {
+      "ts": 1786276260000,
+      "equity": 913.1999829088238
+    },
+    {
+      "ts": 1786276920000,
+      "equity": 912.5928220324258
+    },
+    {
+      "ts": 1786277580000,
+      "equity": 910.6784811126608
+    },
+    {
+      "ts": 1786278240000,
+      "equity": 912.5456686674983
+    },
+    {
+      "ts": 1786278900000,
+      "equity": 908.7155062122127
+    },
+    {
+      "ts": 1786279560000,
+      "equity": 910.2336351287984
+    },
+    {
+      "ts": 1786280220000,
+      "equity": 911.9180803093888
+    },
+    {
+      "ts": 1786280880000,
+      "equity": 908.2914721690975
+    },
+    {
+      "ts": 1786281540000,
+      "equity": 915.9461636497716
+    },
+    {
+      "ts": 1786282200000,
+      "equity": 920.5909370471535
+    },
+    {
+      "ts": 1786282860000,
+      "equity": 918.5748652574555
+    },
+    {
+      "ts": 1786283520000,
+      "equity": 931.1028390943102
+    },
+    {
+      "ts": 1786284180000,
+      "equity": 939.4862031191252
+    },
+    {
+      "ts": 1786284840000,
+      "equity": 944.9177443877313
+    },
+    {
+      "ts": 1786285500000,
+      "equity": 940.4430535701263
+    },
+    {
+      "ts": 1786286160000,
+      "equity": 949.8806567703888
+    },
+    {
+      "ts": 1786286820000,
+      "equity": 955.8786338489033
+    },
+    {
+      "ts": 1786287480000,
+      "equity": 960.8533850273202
+    },
+    {
+      "ts": 1786288140000,
+      "equity": 959.3557033787542
+    },
+    {
+      "ts": 1786288800000,
+      "equity": 957.2920189987893
+    },
+    {
+      "ts": 1786289460000,
+      "equity": 958.6523463981616
+    },
+    {
+      "ts": 1786290120000,
+      "equity": 957.0374189828793
+    },
+    {
+      "ts": 1786290780000,
+      "equity": 965.4622376550255
+    },
+    {
+      "ts": 1786291440000,
+      "equity": 963.5981515345233
+    },
+    {
+      "ts": 1786292100000,
+      "equity": 961.2019167819153
+    },
+    {
+      "ts": 1786292760000,
+      "equity": 940.7491089897767
+    },
+    {
+      "ts": 1786293420000,
+      "equity": 950.0494425964001
+    },
+    {
+      "ts": 1786294080000,
+      "equity": 951.0717121602765
+    },
+    {
+      "ts": 1786294740000,
+      "equity": 950.2998274790548
+    },
+    {
+      "ts": 1786295400000,
+      "equity": 953.7146832273296
+    },
+    {
+      "ts": 1786296060000,
+      "equity": 953.8763059731077
+    },
+    {
+      "ts": 1786296720000,
+      "equity": 951.743512054979
+    },
+    {
+      "ts": 1786297380000,
+      "equity": 944.4131156474824
+    },
+    {
+      "ts": 1786298040000,
+      "equity": 946.9122955120066
+    },
+    {
+      "ts": 1786298700000,
+      "equity": 953.2678159082066
+    },
+    {
+      "ts": 1786299360000,
+      "equity": 942.4790503084032
+    },
+    {
+      "ts": 1786300020000,
+      "equity": 938.2969584814958
+    },
+    {
+      "ts": 1786300680000,
+      "equity": 932.8734540352036
+    },
+    {
+      "ts": 1786301340000,
+      "equity": 933.7217035476053
+    },
+    {
+      "ts": 1786302000000,
+      "equity": 933.0094567117787
+    },
+    {
+      "ts": 1786302660000,
+      "equity": 931.5338504528586
+    },
+    {
+      "ts": 1786303320000,
+      "equity": 914.0438466088269
+    },
+    {
+      "ts": 1786303980000,
+      "equity": 908.631749095124
+    },
+    {
+      "ts": 1786304640000,
+      "equity": 902.0445167327777
+    },
+    {
+      "ts": 1786305300000,
+      "equity": 892.7538152152483
+    },
+    {
+      "ts": 1786305960000,
+      "equity": 890.1906768170871
+    },
+    {
+      "ts": 1786306620000,
+      "equity": 890.008351009228
+    },
+    {
+      "ts": 1786307280000,
+      "equity": 892.1274453407505
+    },
+    {
+      "ts": 1786307940000,
+      "equity": 892.3229283053854
+    },
+    {
+      "ts": 1786308600000,
+      "equity": 892.5232860076046
+    },
+    {
+      "ts": 1786309260000,
+      "equity": 891.2698950825719
+    },
+    {
+      "ts": 1786309920000,
+      "equity": 887.8298200082767
+    },
+    {
+      "ts": 1786310580000,
+      "equity": 891.4110834753664
+    },
+    {
+      "ts": 1786311240000,
+      "equity": 893.1059801113113
+    },
+    {
+      "ts": 1786311480000,
+      "equity": 894.7596269082737
+    }
+  ],
+  "open_at_end": [
+    {
+      "market": "xyz:SOXL",
+      "side": "short",
+      "entry_px": 142.66863,
+      "size": 5.607399468264327,
+      "opened_ts": 1786234320000
+    },
+    {
+      "market": "SUI",
+      "side": "long",
+      "entry_px": 0.701510274,
+      "size": 1140.3966978821468,
+      "opened_ts": 1786288020000
+    },
+    {
+      "market": "ZEC",
+      "side": "short",
+      "entry_px": 518.4962800000001,
+      "size": 1.5429233166340168,
+      "opened_ts": 1786293840000
+    },
+    {
+      "market": "xyz:SNDK",
+      "side": "long",
+      "entry_px": 1232.51595,
+      "size": 0.6490788212517655,
+      "opened_ts": 1786299120000
+    },
+    {
+      "market": "xyz:LITE",
+      "side": "long",
+      "entry_px": 910.7251349999999,
+      "size": 0.8784209079724148,
+      "opened_ts": 1786304880000
+    }
+  ]
+}

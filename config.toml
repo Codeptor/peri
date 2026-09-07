@@ -1,0 +1,143 @@
+# peri runtime configuration.
+#
+# Tuning only. Every number here is evidence from live trading and is meant to
+# be read, argued with and changed. What is NOT here is identity: which account,
+# which Telegram group, which operator. Those read from .env (see .env.example),
+# so this file can be committed and shared without carrying whose money it is.
+#
+# .env overrides, when set: PERI_MODE, HL_NETWORK, TG_GROUP_ID, TG_CONTROL_USER,
+# TG_CALLERS, TG_NOTIFY_CHAT_ID.
+#
+# mode = "dry" paper-trades against live mainnet data. Flip to "live" only when
+# you have read docs/superpowers/manual-trading-runbook.md and mean it: live
+# places real orders with real money.
+
+mode = "dry"                        # dry | live. PERI_MODE in .env overrides this.
+hl_network = "mainnet"              # info source; live orders only when mode="live"
+route_builder_fee = true            # trench builder fee (0.03%) on every live order
+
+[telegram]
+group_id = 0                        # set TG_GROUP_ID in .env — the group to read
+callers = []                        # set TG_CALLERS in .env — handles flagged as callers
+control_user = 0                    # set TG_CONTROL_USER in .env — the only slash-command operator
+read_images = true                  # transcribe posted charts/screenshots at ingest
+                                    #   (the call is often the picture, not the text)
+vision_model = ""                   # blank = ANALYST_MODEL, which reads images itself
+max_image_mb = 8.0                  # bigger than any screenshot: skip, do not pay
+vision_max_per_hour = 30            # bounded spend on a group we do not control
+
+[analyst]
+cycle_secs = 900                    # scheduled decision cadence (caller msgs wake immediately)
+timeout_secs = 240                  # per attempt
+total_deadline_secs = 420           # for the WHOLE decision, retries included. Was
+                                    #   unbounded: 3 x 300s = 900s of a caller wake
+                                    #   returning nothing (08-31 09:16Z).
+retries = 2                         # then the cycle is skipped loudly
+temperature = 0.2
+max_output_tokens = 12000           # NOT a latency knob: measured 08-31, this
+                                    #   endpoint ignores it for reasoning — the same
+                                    #   prompt at max_tokens=3000 emitted 8,176
+                                    #   completion tokens and ran SLOWER (225.8s) than
+                                    #   at 9000 (178.6s). Set high enough never to
+                                    #   truncate; latency is driven by prompt size.
+conviction_min = 0.75               # kestrel evidence: <0.75 entries bled
+max_tool_rounds = 1                 # ONE search turn per cycle (batch queries); each turn = another reasoning pass
+caller_wake_skip_tools = true       # caller-message wakes decide from context — fastest path for scalp calls
+cycle_secs_quiet = 900              # adaptive cadence: a flat tape does not need a decision every 15m
+cycle_secs_active = 300             # ...a moving one cannot wait 15m
+heat_atr_pct = 0.9                  # median candidate ATR15m% at/above which the tape counts as active
+
+[universe]
+native_allow = ["BTC", "ETH", "SOL", "HYPE", "XRP", "DOGE"]
+dexes = ["xyz", "io"]               # builder dexes merged with native. xyz = equities +
+                                    #   commodities; io carries private-company synthetics
+                                    #   (io:ANTH). Trench routes to all of them — the builder
+                                    #   fee rides every order regardless of dex.
+dex_volume_floor = 2000000.0        # min 24h $ volume for a dex candidate
+top_movers = 12                     # dex movers included per cycle
+
+[risk]
+risk_pct = 5.0                      # % of equity risked per trade (raised 08-29 on Bhanu's call:
+                                    #   more size WITHOUT moving liquidation into the noise band,
+                                    #   which is what $50-at-20x would have done)
+max_leverage = 20.0
+max_concurrent = 3                  # 08-31 on Bhanu's call. NB at risk_pct 5% three open
+                                    #   positions put 15% at risk at once — exactly the kill
+                                    #   switch — and the 6% day halt stops new entries after
+                                    #   the second loser, so the third slot only fills on a
+                                    #   day that is not already going wrong.
+daily_entry_cap = 3                 # 08-29: six entries in one day was the shape of the loss
+kill_switch_pct = 15.0              # equity down this % from day open -> entries halted
+min_rr = 2.0                        # reward:risk floor
+stale_call_secs = 900               # mirror entries older than this are refused
+cooldown_secs = 3600                # per-market, after any close
+stop_cooldown_secs = 14400          # per-market, after a stop-out (asymmetric)
+min_notional = 10.0                 # HL venue minimum — refuse, never inflate
+slippage_pct = 5.0
+paper_bankroll = 1000.0             # dry-mode equity base
+tp_net_floor_usd = 3.0              # refuse opens projecting < $3 net at TP (aim $4-5)
+
+# -- 2026-08-29 post-mortem rails. Every loss on 08-28 was the same trade:
+# chase an extended move at the edge of the range with a noise-width stop.
+day_loss_halt_pct = 6.0             # day down 6% -> no new entries (kill switch stays the 15% hammer)
+min_stop_pct = 2.0                  # a stop closer than this is noise, not risk
+atr_stop_mult = 4.0                 # ...and never inside 4x the market's own 15m range
+max_range_pos_long = 0.80           # no longs in the top 20% of the 24h range
+min_range_pos_short = 0.20          # no shorts in the bottom 20%
+equity_open_blackout_mins = 30      # no xyz entries within 30m of the US cash open
+equity_close_blackout_mins = 30     # ...or the close
+equity_rth_only = false             # commodities trade nearly around the clock; only the blackout applies
+breakeven_at_r = 1.0                # at +1R the stop moves to entry+fees, automatically
+time_stop_secs = 10800              # 3h below +0.5R = dead money holding the only slot
+time_stop_min_r = 0.5
+# Trailing. 08-31 evidence: the xyz:CL long peaked at +8.5% on margin (86.388)
+# 14 minutes after filling and gave 80% of it back within the hour, while its
+# TP at 89.5 sat +4.56% away — about 9x ATR15m, a distance that market never
+# reaches inside a position's life. The RR>=2 floor against a 2% minimum stop
+# FORCES targets like that, so the exit has to come from the stop following the
+# move, not from the target being hit.
+trail_start_r = 0.5                 # start trailing once this far in front (0 = off)
+trail_atr_mult = 1.0                # stop rides this many ATR15m behind the high-water mark.
+                                    #   1.0, not 1.5: CL's ATR15m is ~0.51%, and at 10x the
+                                    #   moves worth capturing are 0.5-0.9% of price. A 1.5x
+                                    #   trail (0.77%) is wider than the whole move and would
+                                    #   never lock anything in.
+entry_expiry_secs = 7200            # a resting maker entry that never fills is cancelled after 2h
+event_blackout_mins = 45            # no new entry within 45m of a HIGH-impact calendar
+                                    #   event (NFP, CPI, FOMC). Opening into a scheduled
+                                    #   shock is a coin flip; trade the reaction instead.
+
+[watch]
+enabled = true                      # price-triggered wakes: decide at the START of a move
+poll_secs = 30                      # one cheap marks call per dex
+window_secs = 300                   # rolling window for the move test
+move_pct = 1.0                      # |move| over the window that wakes the analyst.
+                                    #   1.5% fired ZERO times in 24h of real tape (BTC's
+                                    #   busiest 5m candle moved 0.4%); 1.0 still means
+                                    #   ~2x ATR15m on a major, so it stays a real signal.
+rewake_secs = 900                   # per-market debounce
+breakout = true                     # also wake on a new 24h high/low...
+breakout_pct = 0.15                 # ...only when it CLEARS the level by this much.
+                                    #   Replayed against 08-30's 64 wakes: 0.15% removes 60
+                                    #   of them (1.7 compute-hours) and keeps every genuine
+                                    #   break — HYPE 0.23%, SOL 0.20%, DOGE 0.29%. The ones
+                                    #   it cuts were 0.5bp-5bp past the level, i.e. a market
+                                    #   re-breaking the high it had just set.
+[news]
+rss = [
+  "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",
+  "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+  "https://feeds.bloomberg.com/markets/news.rss",
+  "https://www.coindesk.com/arc/outboundfeeds/rss/",
+  "https://cointelegraph.com/rss",
+  "https://blockworks.co/feed",
+  "https://decrypt.co/feed",
+  "https://feeds.feedburner.com/zerohedge/feed",
+]
+max_headlines = 16
+tg_channels = ["WatcherGuru", "TreeNewsFeed", "whale_alert_io", "unfolded",
+               "Cointelegraph", "wublockchainenglish", "infinityhedge",
+               "DDGeopolitics", "cryptoquant_official", "unfolded_defi"]
+
+[notify]
+chat_id = 0                          # set TG_NOTIFY_CHAT_ID in .env — where alerts go

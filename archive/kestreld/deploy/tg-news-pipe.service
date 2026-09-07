@@ -1,0 +1,40 @@
+[Unit]
+Description=tg_news_pipe — Telegram news/signal channels → kestreld /ingest/news (PAPER-ONLY, no trading logic)
+Documentation=file:%h/botta/kestreld/deploy/README.md
+After=network-online.target
+Wants=network-online.target
+# Ordering only, no Requires=: the pipe retries 3× then drops a message with a
+# [warn] when kestreld is down, so it is allowed to run without it.
+After=kestreld.service
+# A missing/expired botta_news.session makes client.start() fail instantly
+# (stdin is /dev/null under systemd). Give up after 5 crashes in 5min and sit in
+# `failed` where status shows it, instead of hammering Telegram auth forever.
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+# Repo root, not kestreld/: the pipe opens ./.env, ./kestreld/kestreld.toml and
+# writes ./botta_news.session relative to cwd.
+WorkingDirectory=%h/botta
+# Absolute path — the user manager's PATH does not include ~/.local/bin.
+ExecStart=%h/.local/bin/uv run --with telethon --with httpx python tg_news_pipe.py
+Restart=on-failure
+RestartSec=10
+# The pipe reports via print(); stdout to journald is a pipe, so without this it
+# is block-buffered and lines arrive late or die with the process.
+Environment=PYTHONUNBUFFERED=1
+# Python installs no default SIGTERM handler — SIGTERM kills the interpreter
+# mid-write. SIGINT raises KeyboardInterrupt, which unwinds asyncio.run() and
+# lets Telethon close its SQLite session cleanly.
+KillSignal=SIGINT
+TimeoutStopSec=20
+# Secrets stay in %h/botta/.env (0600); load_env() uses os.environ.setdefault,
+# so a var injected by systemd would silently win over .env. Do not add
+# EnvironmentFile= — same invariant as kestreld/dotenvy.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tg-news-pipe
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,68 @@
+[
+  {
+    "id": 101,
+    "position_id": 2,
+    "market": "xyz:TSLA",
+    "action": "open",
+    "px": 418.2,
+    "size": 12.5,
+    "fee": 2.35,
+    "realized_pnl": null,
+    "ts": 1786178422236
+  },
+  {
+    "id": 100,
+    "position_id": 1,
+    "market": "ETH",
+    "action": "open",
+    "px": 2485.0,
+    "size": 0.84,
+    "fee": 0.94,
+    "realized_pnl": null,
+    "ts": 1786167622236
+  },
+  {
+    "id": 99,
+    "position_id": 3,
+    "market": "BTC",
+    "action": "tp",
+    "px": 68200.0,
+    "size": 0.12,
+    "fee": 3.68,
+    "realized_pnl": 42.3,
+    "ts": 1786156822236
+  },
+  {
+    "id": 98,
+    "position_id": 4,
+    "market": "SOL",
+    "action": "sl",
+    "px": 138.1,
+    "size": 15.0,
+    "fee": 0.93,
+    "realized_pnl": -18.5,
+    "ts": 1786142422236
+  },
+  {
+    "id": 97,
+    "position_id": 5,
+    "market": "xyz:NVDA",
+    "action": "time_stop",
+    "px": 179.5,
+    "size": 10.0,
+    "fee": 0.81,
+    "realized_pnl": -4.2,
+    "ts": 1786099222236
+  },
+  {
+    "id": 96,
+    "position_id": 6,
+    "market": "BTC",
+    "action": "veto_close",
+    "px": 67000.0,
+    "size": 0.08,
+    "fee": 2.41,
+    "realized_pnl": 12.1,
+    "ts": 1786077622236
+  }
+]

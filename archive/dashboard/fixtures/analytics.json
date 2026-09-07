@@ -1,0 +1,38 @@
+{
+  "conviction_buckets": [
+    { "bucket": "0.70-0.75", "closes": 21, "wins": 8, "net_pnl": -34.72 },
+    { "bucket": "0.75-0.80", "closes": 13, "wins": 7, "net_pnl": 46.18 },
+    { "bucket": "0.80+", "closes": 6, "wins": 5, "net_pnl": 91.35 }
+  ],
+  "per_market": [
+    { "market": "AVAX", "trades": 4, "net_pnl": -6.31, "fees": 1.44 },
+    { "market": "BTC", "trades": 14, "net_pnl": 52.18, "fees": 6.42 },
+    { "market": "DOGE", "trades": 6, "net_pnl": 12.6, "fees": 1.98 },
+    { "market": "ETH", "trades": 12, "net_pnl": -18.77, "fees": 5.11 },
+    { "market": "HYPE", "trades": 9, "net_pnl": -31.44, "fees": 4.02 },
+    { "market": "LINK", "trades": 3, "net_pnl": 2.05, "fees": 0.91 },
+    { "market": "SOL", "trades": 21, "net_pnl": 73.05, "fees": 9.36 }
+  ],
+  "exit_mix_daily": [
+    { "date": "2026-07-26", "tp": 1, "sl": 2, "veto_close": 0, "other": 0 },
+    { "date": "2026-07-27", "tp": 2, "sl": 1, "veto_close": 1, "other": 0 },
+    { "date": "2026-07-28", "tp": 3, "sl": 2, "veto_close": 0, "other": 1 },
+    { "date": "2026-07-29", "tp": 1, "sl": 3, "veto_close": 1, "other": 0 },
+    { "date": "2026-07-30", "tp": 2, "sl": 2, "veto_close": 0, "other": 0 },
+    { "date": "2026-07-31", "tp": 4, "sl": 1, "veto_close": 2, "other": 1 },
+    { "date": "2026-08-01", "tp": 2, "sl": 3, "veto_close": 1, "other": 0 },
+    { "date": "2026-08-02", "tp": 3, "sl": 2, "veto_close": 0, "other": 0 },
+    { "date": "2026-08-03", "tp": 1, "sl": 4, "veto_close": 1, "other": 1 },
+    { "date": "2026-08-04", "tp": 3, "sl": 1, "veto_close": 2, "other": 0 },
+    { "date": "2026-08-05", "tp": 2, "sl": 2, "veto_close": 1, "other": 0 },
+    { "date": "2026-08-06", "tp": 4, "sl": 2, "veto_close": 0, "other": 1 },
+    { "date": "2026-08-07", "tp": 2, "sl": 3, "veto_close": 1, "other": 0 },
+    { "date": "2026-08-08", "tp": 1, "sl": 1, "veto_close": 1, "other": 0 }
+  ],
+  "counterfactuals": {
+    "computed": 9,
+    "pending": 2,
+    "net_actual": -12.44,
+    "net_bracket": -31.07
+  }
+}
