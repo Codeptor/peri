@@ -78,9 +78,18 @@ class RiskCfg:
     time_stop_secs: int = 0             # close a position stuck below time_stop_min_r for this long
     time_stop_min_r: float = 0.5
     # Trailing: once a position is this far in front, the stop follows the
-    # high-water mark at trail_atr_mult x ATR15m behind it. 0 disables.
+    # high-water mark, giving back at most trail_giveback_r of the risk taken
+    # and never less than trail_atr_mult x ATR15m (the market's own noise). 0
+    # disables. The band is expressed in R because the giveback that matters is
+    # a fraction of what was risked, not a raw ATR count: with a 4x-ATR stop a
+    # 1x-ATR band meant a winner was cut at +0.25R while every loser paid -1R.
     trail_start_r: float = 0.0
     trail_atr_mult: float = 1.5
+    trail_giveback_r: float = 0.5
+    # Scale-out: bank `scale_out_frac` of the position at `scale_out_at_r` and
+    # let the rest run to the analyst's target. 0 disables.
+    scale_out_at_r: float = 0.0
+    scale_out_frac: float = 0.5
     entry_expiry_secs: int = 7200       # a resting entry that never fills is cancelled after this
     event_blackout_mins: int = 0        # no new entry this soon before a HIGH-impact
                                         #   calendar event (0 = off). Entering minutes
@@ -262,6 +271,9 @@ def load_config(path: str = "config.toml", env_path: str = ".env") -> Config:
                      float(r.get("time_stop_min_r", 0.5)),
                      float(r.get("trail_start_r", 0.0)),
                      float(r.get("trail_atr_mult", 1.5)),
+                     float(r.get("trail_giveback_r", 0.5)),
+                     float(r.get("scale_out_at_r", 0.0)),
+                     float(r.get("scale_out_frac", 0.5)),
                      int(r.get("entry_expiry_secs", 7200)),
                      int(r.get("event_blackout_mins", 0)),
                      float(r.get("max_mark_drift_pct", 0.5))),

@@ -158,12 +158,26 @@ MEMORY — you do not learn any other way:
 - Do not re-write something already in YOUR MEMORY (duplicates are dropped), and
   do not write a lesson your record does not actually support.
 
-AUTOMATIC POSITION MANAGEMENT (the engine does this without asking you):
-- At +{breakeven_at_r}R the stop moves to your entry plus fees, so a winner can
-  no longer turn into a loser. Do not spend an adjust_stop action on that.
+AUTOMATIC POSITION MANAGEMENT (the engine does this without asking you — never
+spend an adjust_stop on any of it):
+- Reaching +{scale_out_at_r}R does two things at once. {scale_out_pct}% of the
+  position is BANKED at a resting venue order there, and the stop on what is
+  left starts TRAILING the high-water mark, giving back at most
+  {trail_giveback_r}R of what you risked (and never less than {trail_atr_mult}x
+  ATR15m, so it clears the market's own noise). If a band cannot be computed the
+  stop falls back to breakeven — entry plus fees — so a winner can never become
+  a loser either way.
+- Read that as the shape of every trade you win: half paid at +{scale_out_at_r}R,
+  the rest riding a stop that follows the move. YOUR TAKE_PROFIT IS THE CEILING,
+  NOT THE LIKELY EXIT — most runners are closed by the trail on a pullback long
+  before your target prints. "gave back" in YOUR MEASURED RECORD is how this has
+  actually behaved for you.
 - A position still below +{time_stop_min_r}R after {time_stop_hours}h is closed as
-  dead money — it was holding the only slot. Size your take-profit to a move that
-  can actually happen in that window.
+  dead money — it was holding a slot. One that has already banked its tranche is
+  exempt: it has paid for its slot.
+- So place the target at a level the market can genuinely reach in hours. A
+  distant one that merely satisfies the RR floor on paper is not a better trade;
+  it is the same trade with a target nobody ever collects.
 
 SIZING OBJECTIVE (policy set by your operators):
 - You run at most {max_concurrent} autonomous position(s) at a time — CAPACITY
@@ -209,7 +223,9 @@ return zero or one proposal for a later immutable confirmation:
   market — below the mark for a long, above it for a short. Prefer it: the whole
   trade (size, RR, the net-TP floor) is priced from your entry, and it expires
   unfilled rather than paying the spread to chase;
-- close: close the full position only; partial closes and add-size are unsupported.
+- close: closes the full REMAINING position; you cannot close part of one or add
+  to it. (The engine may already have banked a tranche at the scale-out level, so
+  what is left can be smaller than what you opened.)
   A close on a market where you have a RESTING ENTRY instead cancels that order —
   use it the moment the thesis behind a parked entry dies, rather than letting it
   fill into news you have already read;
@@ -585,8 +601,19 @@ def render_context(bundle: dict, now: Optional[float] = None) -> str:
             hold = (f"{b['median_hold_mins']:.0f}m"
                     if b["median_hold_mins"] is not None else "?")
             plural = "trade" if b["n"] == 1 else "trades"
-            return (f"- {label}: {b['n']} {plural}, {wr} win, ${b['pnl']:+.2f}, "
+            line = (f"- {label}: {b['n']} {plural}, {wr} win, ${b['pnl']:+.2f}, "
                     f"avg {avg_r}, median hold {hold}")
+            # Excursion: how far these trades ran in your favour before they
+            # ended, and how much of that they handed back. A healthy avg_r with
+            # a large giveback means the ENTRIES were right and the EXIT was
+            # early — a different problem from picking the wrong direction.
+            if b.get("avg_mfe_r") is not None:
+                line += f", best {b['avg_mfe_r']:+.2f}R"
+            if b.get("avg_giveback_r") is not None:
+                line += f" (gave back {b['avg_giveback_r']:+.2f}R)"
+            if b.get("avg_mae_r") is not None:
+                line += f", worst {b['avg_mae_r']:+.2f}R"
+            return line
 
         L.append("\nYOUR MEASURED RECORD (every closed trade, computed from the "
                  "ledger — this is what your decisions have actually produced, "
@@ -595,7 +622,11 @@ def render_context(bundle: dict, now: Optional[float] = None) -> str:
         for section, title in (("by_entry_style", "entry style"),
                                ("by_range_position", "where in the 24h range you entered"),
                                ("by_side", "side"),
-                               ("by_close_reason", "how it ended")):
+                               ("by_close_reason", "which bracket filled"),
+                               ("by_exit_kind", "what actually ended it"),
+                               ("by_conviction", "the conviction you assigned"),
+                               ("by_trigger", "what woke the cycle"),
+                               ("by_volatility", "the market's volatility at entry")):
             buckets = perf.get(section) or {}
             if len(buckets) > 1 or (buckets and section == "by_range_position"):
                 L.append(f"  {title}:")
@@ -802,6 +833,11 @@ class Analyst:
             equity_blackout=max(rails.equity_open_blackout_mins,
                                 rails.equity_close_blackout_mins),
             breakeven_at_r=f"{rails.breakeven_at_r:g}",
+            trail_start_r=f"{rails.trail_start_r:g}",
+            trail_giveback_r=f"{rails.trail_giveback_r:g}",
+            trail_atr_mult=f"{rails.trail_atr_mult:g}",
+            scale_out_at_r=f"{rails.scale_out_at_r:g}",
+            scale_out_pct=f"{rails.scale_out_frac * 100:g}",
             time_stop_min_r=f"{rails.time_stop_min_r:g}",
             time_stop_hours=f"{rails.time_stop_secs / 3600:g}",
             daily_cap=rails.daily_entry_cap,

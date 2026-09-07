@@ -17,6 +17,7 @@ Sizing derives from stop distance, never the reverse:
     margin    = notional / leverage
 """
 
+import math
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -24,8 +25,8 @@ from typing import Optional, Union
 from zoneinfo import ZoneInfo
 
 from peri.config import RiskCfg
-from peri.fees import FeeSchedule, HL_SCHEDULE
-from peri.hl_sizing import notional_to_size
+from peri.fees import HL_SCHEDULE, FeeSchedule
+from peri.hl_sizing import format_price, notional_to_size
 from peri.models import OpenAction
 from peri.state import State
 
@@ -44,11 +45,81 @@ class Approved:
     entry_px: float = 0.0    # the price every number above was derived from
     resting: bool = False    # True when entry_px is a resting limit, not the mark
     size: float = 0.0        # the EXACT venue lot; nothing downstream re-rounds
+    # The take-profit split, resolved HERE so the adapters place it rather than
+    # deriving their own. None = one full-size target, the original behaviour.
+    scale_out: "Optional[ScaleOut]" = None
 
 
 @dataclass
 class Refusal:
     reason: str
+
+
+@dataclass(frozen=True)
+class ScaleOut:
+    """A take-profit split into a banked tranche and a runner.
+
+    tp1_px/tp1_size close `scale_out_frac` of the position at
+    `scale_out_at_r`; runner_size rides on to the analyst's own target with the
+    trail behind it. Sizes FLOOR to the venue lot and always sum to the
+    approved size exactly — the runner takes the remainder, so rounding can
+    never leave a sliver of the position unprotected."""
+    tp1_px: float
+    tp1_size: float
+    runner_size: float
+    at_r: float
+
+    def blended_r(self, rr: float) -> float:
+        """Reward in R once the target is reached, weighted by lot.
+
+        Not used for sizing — for the honest TP projection. With part of the
+        position banked at `at_r`, reward at target is no longer `rr` across
+        the whole lot, and a floor that ignored that would be inflated by
+        construction. Refuse rather than inflate."""
+        total = self.tp1_size + self.runner_size
+        if total <= 0:
+            return rr
+        w = self.tp1_size / total
+        return w * self.at_r + (1.0 - w) * rr
+
+
+def plan_scale_out(side: str, entry_px: float, stop_px: float, tp_px: float,
+                   size: float, sz_decimals: int, *, at_r: float, frac: float,
+                   min_notional: float) -> Optional[ScaleOut]:
+    """Split one target into a banked tranche and a runner, or None.
+
+    ONE definition, shared by the gate, the live adapter and the paper adapter,
+    so dry mode can never model a different trade from the one live would place
+    (the F1 lesson from 2026-09-07: the market path let the adapter re-derive a
+    size and sent more risk than was approved).
+
+    Returns None — meaning "ship the single full-size target unchanged" —
+    whenever a split would be dishonest rather than useful: the feature is off,
+    the analyst's own target is already nearer than the tranche, or either
+    piece floors to nothing or to dust below the venue minimum."""
+    if at_r <= 0 or not (0.0 < frac < 1.0) or size <= 0:
+        return None
+    risk = abs(entry_px - stop_px)
+    if risk <= 0:
+        return None
+    tp1 = (entry_px + at_r * risk) if side == "long" else (entry_px - at_r * risk)
+    # The runner's target has to be strictly beyond the tranche, or this is not
+    # a scale-out — it is two orders at the same level.
+    if side == "long" and not tp1 < tp_px:
+        return None
+    if side == "short" and not tp1 > tp_px:
+        return None
+    step = 10 ** -sz_decimals
+    tp1_size = round(math.floor((size * frac) / step + 1e-9) * step, sz_decimals)
+    runner = round(size - tp1_size, sz_decimals)
+    if tp1_size <= 0 or runner <= 0:
+        return None
+    tp1 = format_price(tp1, sz_decimals)
+    # A tranche too small to be worth a fill is churn: it pays a full builder
+    # fee to bank pennies and leaves the runner under-sized.
+    if tp1_size * tp1 < min_notional or runner * tp_px < min_notional:
+        return None
+    return ScaleOut(tp1_px=tp1, tp1_size=tp1_size, runner_size=runner, at_r=at_r)
 
 
 def _stop_distance(side: str, mark: float, stop: float) -> Optional[float]:
@@ -77,6 +148,26 @@ MIN_ENTRY_OFFSET_PCT = 0.1   # ...and closer than this is a market order wearing
 # precision of any price the venue accepts.
 BOUNDARY_EPS = 1e-9
 LIQ_SAFETY = 1.3             # liquidation must sit this many stop-distances away
+
+
+def range_position(features: Optional[dict], px: float,
+                   resting: bool) -> Optional[float]:
+    """Where `px` sits in the last 24h range: 0.0 at the low, 1.0 at the high.
+
+    ONE definition, because there were two. The gate judges a resting entry at
+    its own level (2026-08-30: measuring at the mark refused 12 legitimate
+    entries in 36h), but the ledger recorded the mark-derived figure — so
+    `by_range_position` in the measured record was bucketing a different number
+    from the one that actually gated the trade, and the analyst was learning
+    from a statistic about a decision nobody made."""
+    if resting:
+        hi = (features or {}).get("hi_24h")
+        lo = (features or {}).get("lo_24h")
+        if (isinstance(hi, (int, float)) and isinstance(lo, (int, float))
+                and hi > lo > 0):
+            return min(1.0, max(0.0, (px - lo) / (hi - lo)))
+    pos = (features or {}).get("range24h_pos")
+    return pos if isinstance(pos, (int, float)) else None
 
 
 def isolated_liq_distance(leverage: float, market_max_lev: float) -> float:
@@ -365,19 +456,10 @@ class Guard:
         # These gates FAIL CLOSED. A missing feature used to mean "skip", which
         # switched the 08-29 rails off for exactly the market whose candles were
         # down — refuse instead, and say why.
-        range_pos = (features or {}).get("range24h_pos")
-        if resting:
-            # Judge where the ENTRY sits in the range, not where the mark sits.
-            # Everything else on this path is already priced at entry_px, and a
-            # resting order is precisely the "wait for a pullback / bounce"
-            # behaviour this gate's own refusal text asks for — measuring it at
-            # the mark refused 12 such entries in 36h on 2026-08-30, including
-            # bounce shorts resting ABOVE a market pinned at its low.
-            hi = (features or {}).get("hi_24h")
-            lo = (features or {}).get("lo_24h")
-            if (isinstance(hi, (int, float)) and isinstance(lo, (int, float))
-                    and hi > lo > 0):
-                range_pos = min(1.0, max(0.0, (entry_px - lo) / (hi - lo)))
+        # Judged where the ENTRY sits, not where the mark sits — see
+        # range_position(), which the ledger now shares so the measured record
+        # buckets the same number this gate ruled on.
+        range_pos = range_position(features, entry_px, resting)
         gate_needs_range = (self.cfg.max_range_pos_long < 1.0
                             or self.cfg.min_range_pos_short > 0.0)
         if gate_needs_range and not isinstance(range_pos, (int, float)):
@@ -487,9 +569,27 @@ class Guard:
         # because risk.py cannot import router without a cycle — so the gate
         # deciding whether a trade clears its costs could silently disagree with
         # the ledger booking them. peri.fees imports nothing and settles it.
+        scale_out = plan_scale_out(
+            a.side, entry_px, a.stop, a.take_profit, size, sz_decimals or 0,
+            at_r=self.cfg.scale_out_at_r, frac=self.cfg.scale_out_frac,
+            min_notional=self.cfg.min_notional)
+
         if self.cfg.tp_net_floor_usd > 0:
+            # self.fees, not the module constants: a zero-fee venue must price
+            # its trades at zero rather than inherit HL's schedule.
             round_trip_fees = notional * self.fees.round_trip_rate(resting)
-            projected_net_tp = rr * risk_usd - round_trip_fees
+            # against actual_risk, not the pre-floor budget: the lot was FLOORED
+            # to the venue step a few lines up, so `risk_usd` is what we wanted
+            # to stake and `actual_risk` is what this lot actually stakes. Using
+            # the budget overstated the projection by the whole flooring gap —
+            # on a coarse-lot market that is the difference between clearing the
+            # floor on paper and clearing it in the account.
+            # And with a tranche banked at scale_out_at_r, reward at target is
+            # the lot-weighted blend, not rr across the whole position:
+            # projecting the un-blended figure would inflate this floor by
+            # construction. Both corrections make the gate stricter.
+            reward_r = scale_out.blended_r(rr) if scale_out else rr
+            projected_net_tp = reward_r * actual_risk - round_trip_fees
             if projected_net_tp < self.cfg.tp_net_floor_usd:
                 return Refusal(
                     f"projected net TP ${projected_net_tp:.2f} < floor "
@@ -499,7 +599,7 @@ class Guard:
         return Approved(market=a.market, side=a.side, notional=notional,
                         size_usd_risk=risk_usd, leverage=leverage, margin=margin,
                         margin_mode=a.margin_mode,
-                        stop_px=a.stop, tp_px=a.take_profit,
+                        stop_px=a.stop, tp_px=a.take_profit, scale_out=scale_out,
                         entry_px=entry_px, resting=resting, size=size)
 
     def cooldown_after_close(self, market: str, reason: str,

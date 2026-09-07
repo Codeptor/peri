@@ -8,7 +8,7 @@ import time
 from typing import Optional
 
 from peri.hl_sizing import format_price, tpsl_limit_price
-from peri.risk import Approved
+from peri.risk import Approved, ScaleOut
 from peri.state import Position
 
 # Trench's builder identity. Fee f is in tenths of a bp (30 = 0.03%).
@@ -223,20 +223,33 @@ class HyperliquidAdapter:
             raise RuntimeError(f"trigger order was not confirmed resting: {response!r}") from exc
 
     def place_brackets(self, market: str, side: str, size: float,
-                       stop_px: float, tp_px: float) -> list[dict]:
+                       stop_px: float, tp_px: float,
+                       scale_out: Optional[ScaleOut] = None) -> list[dict]:
+        """Stop at FULL size, take-profit either whole or split in two.
+
+        The stop stays full-size on purpose: until the first tranche fills the
+        whole position is still at risk, and a stop sized to the runner would
+        leave the rest of it naked."""
         mi = self.market.info(market)
         close_is_buy = side == "short"
+        legs = [("sl", stop_px, size)]
+        if scale_out is not None:
+            legs.append(("tp", scale_out.tp1_px, scale_out.tp1_size))
+            legs.append(("tp", tp_px, scale_out.runner_size))
+        else:
+            legs.append(("tp", tp_px, size))
         placed = []
         try:
-            for kind, price in (("sl", stop_px), ("tp", tp_px)):
+            for kind, price, leg_size in legs:
                 response = self._trigger(
-                    market, is_buy=close_is_buy, sz=size, px=price,
+                    market, is_buy=close_is_buy, sz=leg_size, px=price,
                     tpsl=kind, szd=mi.sz_decimals,
                 )
                 placed.append({
                     "oid": self._resting_oid(response),
                     "kind": kind,
                     "trigger_px": format_price(price, mi.sz_decimals),
+                    "size": leg_size,
                 })
         except Exception:
             self.cancel_orders(market, [order["oid"] for order in placed])
@@ -262,10 +275,16 @@ class HyperliquidAdapter:
             "coin": coin, "is_buy": is_long, "sz": size, "limit_px": entry_px,
             "order_type": {"limit": {"tif": "Gtc"}}, "reduce_only": False,
         }]
-        for kind, price in (("sl", ap.stop_px), ("tp", ap.tp_px)):
+        child_legs = [("sl", ap.stop_px, size)]
+        if ap.scale_out is not None:
+            child_legs.append(("tp", ap.scale_out.tp1_px, ap.scale_out.tp1_size))
+            child_legs.append(("tp", ap.tp_px, ap.scale_out.runner_size))
+        else:
+            child_legs.append(("tp", ap.tp_px, size))
+        for kind, price, leg_size in child_legs:
             trigger_px = format_price(price, szd)
             orders.append({
-                "coin": coin, "is_buy": close_is_buy, "sz": size,
+                "coin": coin, "is_buy": close_is_buy, "sz": leg_size,
                 "limit_px": tpsl_limit_price(trigger_px, close_is_buy=close_is_buy,
                                              sz_decimals=szd),
                 "order_type": {"trigger": {"triggerPx": trigger_px, "isMarket": True,
@@ -326,7 +345,8 @@ class HyperliquidAdapter:
         fill = self.open_entry(ap, mark)
         try:
             self.place_brackets(
-                ap.market, ap.side, fill["size"], ap.stop_px, ap.tp_px
+                ap.market, ap.side, fill["size"], ap.stop_px, ap.tp_px,
+                scale_out=ap.scale_out,
             )
         except Exception:
             transient = Position(
@@ -347,11 +367,17 @@ class HyperliquidAdapter:
         self.cancel_brackets(pos.market)
         return result
 
-    def adjust_stop(self, pos: Position, stop_px: float, tp_px: float) -> dict:
-        """Place the complete replacement pair before removing old protection."""
+    def adjust_stop(self, pos: Position, stop_px: float, tp_px: float,
+                    scale_out: Optional[ScaleOut] = None) -> dict:
+        """Place the complete replacement pair before removing old protection.
+
+        `scale_out` must be passed whenever the position still carries an
+        unfilled tranche, or replacing the brackets would quietly collapse the
+        split back into one full-size target — and the trail arms at the same R
+        the tranche banks at, so that race is the common case, not the corner."""
         old_orders = self.bracket_orders(pos.market)
         new_orders = self.place_brackets(
-            pos.market, pos.side, pos.size, stop_px, tp_px
+            pos.market, pos.side, pos.size, stop_px, tp_px, scale_out=scale_out
         )
         self.cancel_orders(pos.market, [order["oid"] for order in old_orders])
         return {

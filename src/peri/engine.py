@@ -22,10 +22,11 @@ from peri.config import Config
 from peri.hl_sizing import format_price
 from peri.market import Market
 from peri.models import (Action, AdjustStopAction, CloseAction, OpenAction,
-                         RememberAction)
+                         RememberAction, restates_a_statistic)
 from peri.notifier import Notifier, fmt_close, fmt_open, fmt_refusal
-from peri.risk import Approved, Guard, Refusal, isolated_liq_distance
-from peri.fees import FeeSchedule, HL_SCHEDULE
+from peri.fees import HL_SCHEDULE, FeeSchedule
+from peri.risk import (Approved, Guard, Refusal, ScaleOut, isolated_liq_distance,
+                       plan_scale_out, range_position)
 from peri.router import Adapter, bracket_hit, realized_pnl
 from peri.state import Position, State, dumps_actions
 from pydantic import TypeAdapter
@@ -1216,14 +1217,21 @@ class Engine:
             "fills": self._recent_venue_fills[:50] if self.cfg.mode == "live" else [],
         }
 
-    def _entry_context(self, market: str, resting: bool) -> dict:
+    def _entry_context(self, market: str, resting: bool,
+                       entry_px: Optional[float] = None) -> dict:
         """What the setup looked like at the moment of the decision. Closed
         trades are attributed against this — without it the ledger can say a
-        trade lost but never that a KIND of trade loses."""
+        trade lost but never that a KIND of trade loses.
+
+        range_pos comes from risk.range_position, the SAME function the gate
+        rules with. It used to be read straight off the mark-derived feature
+        while the gate judged a resting entry at its own level, so the
+        by_range_position bucket described a decision nobody had made."""
         features = self._features_cache.get(market) or {}
+        px = entry_px if isinstance(entry_px, (int, float)) and entry_px > 0 else 0.0
         return {
             "style": "resting" if resting else "market",
-            "range_pos": features.get("range24h_pos"),
+            "range_pos": range_position(features, px, resting and px > 0),
             "atr_pct": features.get("atr15m_pct"),
             "trigger": self._current_trigger,
         }
@@ -1915,7 +1923,8 @@ class Engine:
                 conviction=action.conviction, rationale=action.rationale,
                 invalidation=action.invalidation, oid=placed.get("oid"),
                 decision_id=decision_id, expires_ts=expires_ts,
-                entry_context=self._entry_context(action.market, resting=True),
+                entry_context=self._entry_context(action.market, resting=True,
+                                                  entry_px=preview["entry_px"]),
             )
         except Exception as exc:  # noqa: BLE001 — an untracked live order is worse
             # The order is ALREADY at the venue. Without its ledger row nothing
@@ -2083,7 +2092,9 @@ class Engine:
                     "source": action.source,
                     "rationale": action.rationale,
                     "invalidation": action.invalidation,
-                    "entry_context": self._entry_context(action.market, resting=False),
+                    "entry_context": self._entry_context(
+                        action.market, resting=False,
+                        entry_px=float(fill["entry_px"])),
                 },
                 result=result,
                 day=day,
@@ -2180,6 +2191,11 @@ class Engine:
                 **{key: value for key, value in result.items()
                    if key not in ("status", "execution_id")},
             )
+        # The time stop routes through exec_close like any other close, so
+        # without this every dead-money exit was filed as a discretionary
+        # analyst decision and the two could not be told apart in the record.
+        self.state.set_exit_kind(
+            position.id, "time_stop" if origin == "time_stop" else origin)
         self.guard.cooldown_after_close(position.market, "analyst", pnl=pnl)
         self.notify.send(fmt_close(
             position.market, f"analyst: {action.rationale[:80]}", close_px, pnl
@@ -2222,7 +2238,9 @@ class Engine:
         try:
             with self._adapter_lock:
                 venue_result = self.adapter.adjust_stop(
-                    position, preview["new_stop_px"], preview["new_tp_px"]
+                    position, preview["new_stop_px"], preview["new_tp_px"],
+                    scale_out=self._scale_out_for(
+                        position, tp_px=float(preview["new_tp_px"])),
                 )
         except Exception as exc:  # noqa: BLE001 — pair state may need inspection
             status = "needs_reconciliation" if self.cfg.mode == "live" else "failed"
@@ -2350,6 +2368,14 @@ class Engine:
         writing it is repeating Friday."""
         if a.market and not self.market.known(a.market):
             self.refuse(a, f"lesson tagged to unknown market {a.market}")
+            return
+        if restates_a_statistic(a.lesson):
+            self.refuse(a, "lesson restates a statistic (win rate / trade count / "
+                           "avg R). YOUR MEASURED RECORD is recomputed from the "
+                           "ledger every cycle and supersedes any number frozen "
+                           "into memory — six stale versions of the long/short "
+                           "split were being replayed as fact on 2026-09-07. "
+                           "Write the causal rule instead: what to do and why.")
             return
         lesson_id = self.state.add_lesson(
             a.lesson, market=a.market, source="analyst", decision_id=decision_id)
@@ -2522,7 +2548,8 @@ class Engine:
             oid=int(oid) if oid is not None else None,
             decision_id=journal.get("decision_id"),
             expires_ts=float(journal["submission_ts"]) + self.cfg.risk.entry_expiry_secs,
-            entry_context=self._entry_context(action.market, resting=True),
+            entry_context=self._entry_context(action.market, resting=True,
+                                              entry_px=float(expected["entry_px"])),
         )
         self.state.update_action_execution(
             journal["id"], stage="resting", status="executed",
@@ -2890,18 +2917,75 @@ class Engine:
         move = (mark - pos.entry_px) if pos.side == "long" else (pos.entry_px - mark)
         return move / risk
 
+    def _scale_out_for(self, pos: Position,
+                       tp_px: Optional[float] = None) -> "Optional[ScaleOut]":
+        """The tranche split a replacement bracket set must preserve.
+
+        None once a tranche has banked — the remainder is a runner and
+        re-splitting it would sell the same profit twice. `tp_px` overrides the
+        position's stored target so an analyst adjust_stop re-derives the split
+        against the target it is actually setting."""
+        cfg = self.cfg.risk
+        target = tp_px if tp_px is not None else pos.tp_px
+        if cfg.scale_out_at_r <= 0 or target is None:
+            return None
+        if self.state.has_scaled_out(pos.id):
+            return None
+        init_stop = self.state.initial_stop(pos.id)
+        if init_stop is None or init_stop <= 0:
+            return None
+        try:
+            szd = self.market.info(pos.market).sz_decimals
+        except Exception:  # noqa: BLE001 — unknown meta is not a reason to drop protection
+            return None
+        return plan_scale_out(
+            pos.side, pos.entry_px, init_stop, target, pos.size, szd,
+            at_r=cfg.scale_out_at_r, frac=cfg.scale_out_frac,
+            min_notional=cfg.min_notional)
+
+    def _position_risk_dist(self, pos: Position) -> Optional[float]:
+        """The absolute price distance the position was SIZED with — 1R in
+        price. None when the initial stop is unknown (adopted externals)."""
+        init_stop = self.state.initial_stop(pos.id)
+        if init_stop is None or init_stop <= 0 or pos.entry_px <= 0:
+            return None
+        dist = abs(pos.entry_px - init_stop)
+        return dist if dist > 0 else None
+
+    def _position_atr_pct(self, pos: Position) -> Optional[float]:
+        """ATR15m% for a held market: this cycle's features if we have them,
+        else the value captured at entry.
+
+        The cache is only filled by a full cycle, so reading it alone made the
+        trail vanish whenever manage_positions ran without one — which is how
+        trailing reached production on 2026-09-05 having never once trailed."""
+        live = (self._features_cache.get(pos.market) or {}).get("atr15m_pct")
+        if isinstance(live, (int, float)) and live > 0:
+            return float(live)
+        stored = self.state.entry_atr(pos.id)
+        if isinstance(stored, (int, float)) and stored > 0:
+            return float(stored)
+        return None
+
     def manage_positions(self, marks: dict) -> bool:
-        """Two code-owned rules, applied before the analyst ever sees the book.
+        """Three code-owned rules, applied before the analyst ever sees the book.
         Returns True when it changed the book, so the caller can re-read state.
 
         breakeven — once a trade is `breakeven_at_r` R in front, its stop moves
         to entry plus the round-trip fee, so a winner can no longer become a
-        loser. time stop — a position that has not reached `time_stop_min_r`
-        after `time_stop_secs` is dead money holding the one concurrency slot;
-        close it and free the slot.
+        loser. trailing — past `trail_start_r` the stop follows the high-water
+        mark, giving back at most `trail_giveback_r` of the risk taken. time
+        stop — a position that has not reached `time_stop_min_r` after
+        `time_stop_secs` is dead money holding a concurrency slot; close it.
+
+        Excursion (MAE/MFE) is recorded for EVERY open position on every pass,
+        including ones none of the three rules touch — how far a trade ran and
+        how far it went against us first are the two numbers that decide where
+        stops and trails belong, and neither was measured before 2026-09-07.
         """
         cfg = self.cfg.risk
-        if cfg.breakeven_at_r <= 0 and cfg.time_stop_secs <= 0:
+        if (cfg.breakeven_at_r <= 0 and cfg.time_stop_secs <= 0
+                and cfg.trail_start_r <= 0):
             return False
         changed = False
         now = time.time()
@@ -2914,8 +2998,16 @@ class Engine:
             r = self._position_r(pos, mark)
             if r is None:
                 continue
+            # Before any rule can `continue` past this position: record how far
+            # it has run and how far it has been against us. Every branch below
+            # exits the loop body, so this has to come first.
+            self.state.update_excursion(pos.id, r)
+            # A position that has already banked a tranche is not dead money —
+            # it paid for its slot. Closing the runner on the clock would take
+            # the cheap half of the trade and leave the expensive half.
             if (cfg.time_stop_secs > 0 and now - pos.opened_ts >= cfg.time_stop_secs
-                    and r < cfg.time_stop_min_r):
+                    and r < cfg.time_stop_min_r
+                    and not self.state.has_scaled_out(pos.id)):
                 age_m = int((now - pos.opened_ts) / 60)
                 action = CloseAction(
                     market=pos.market,
@@ -2947,16 +3039,43 @@ class Engine:
             # against a 2% minimum stop forces targets that far out, so on
             # anything but a runaway move the exit has to come from the stop
             # following the price, not from the target being reached.
+            #
+            # 2026-09-07: that cure, as first written, cut the winners it was
+            # meant to keep. The band was a raw 1x ATR15m and it armed at +0.5R
+            # — but the stop is never tighter than atr_stop_mult (4x ATR), so
+            # +0.5R is only ~2x ATR of profit. Arming there moved the stop from
+            # -4 ATR to +1 ATR in a single step and left a QUARTER of an R of
+            # room, while every loser still paid the full -1R. One take-profit
+            # in 27 trades is that arithmetic, not variance.
+            #
+            # So the band is now a fraction of the RISK TAKEN (trail_giveback_r)
+            # and ATR is only its floor — the giveback that matters is measured
+            # against what was staked, not against a raw ATR count that means
+            # something different on every market.
             if cfg.trail_start_r > 0 and r >= cfg.trail_start_r:
                 peak = self.state.update_peak(pos.id, mark)
-                atr_pct = (self._features_cache.get(pos.market) or {}).get("atr15m_pct")
-                if isinstance(atr_pct, (int, float)) and atr_pct > 0:
+                band = 0.0
+                stop_dist = self._position_risk_dist(pos)
+                if cfg.trail_giveback_r > 0 and stop_dist:
+                    band = cfg.trail_giveback_r * stop_dist
+                atr_pct = self._position_atr_pct(pos)
+                if atr_pct:
                     # the trail must clear this market's own noise, or it is a
                     # coin-flip exit dressed up as risk management
-                    band = peak * (atr_pct / 100.0) * cfg.trail_atr_mult
+                    band = max(band, peak * (atr_pct / 100.0) * cfg.trail_atr_mult)
+                if band > 0:
                     trailed = peak - band if pos.side == "long" else peak + band
                     target = format_price(trailed, mi.sz_decimals)
-                    how = f"trailing {cfg.trail_atr_mult:g}xATR behind {peak:g}"
+                    how = (f"trailing {band:g} behind {peak:g} "
+                           f"({cfg.trail_giveback_r:g}R giveback, "
+                           f"{cfg.trail_atr_mult:g}xATR floor)")
+                else:
+                    # Neither an initial stop nor any ATR to size a band with.
+                    # Say so: the previous version returned silently and the
+                    # trail was simply absent for the life of the position.
+                    self.notify.send(
+                        f"trail unavailable on {pos.market}: no initial stop and no "
+                        f"ATR15m (live or entry) — position runs on its fixed stop")
 
             # -- breakeven: a winner must not become a loser ------------------
             if target is None:
@@ -2978,7 +3097,8 @@ class Engine:
                 continue
             try:
                 with self._adapter_lock:
-                    self.adapter.adjust_stop(pos, target, pos.tp_px)
+                    self.adapter.adjust_stop(pos, target, pos.tp_px,
+                                             scale_out=self._scale_out_for(pos))
                 self.state.update_brackets(pos.id, target, pos.tp_px)
             except Exception as exc:  # noqa: BLE001 — protection stays as it was
                 self.notify.send(f"stop move failed on {pos.market} ({how}): {exc!r}")
@@ -3188,6 +3308,34 @@ class Engine:
                 return "tp"
         return "external"
 
+    def _exit_kind(self, pos: Position, reason: str) -> str:
+        """Refine a venue close_reason into the mechanism that caused it.
+
+        close_reason answers "which bracket filled" and collapses three very
+        different outcomes into 'sl': a thesis that was wrong and paid -1R, a
+        winner parked at breakeven, and a winner the trail took out in profit.
+        The measured record is the only thing the analyst carries between
+        cycles, so with them merged it could see "my stops keep getting hit"
+        and never "I keep being trailed out of winners" — the actual defect.
+        """
+        if reason != "sl":
+            return reason
+        init_stop = self.state.initial_stop(pos.id)
+        if init_stop is None or init_stop <= 0 or pos.stop_px is None:
+            return "stop"
+        # Untouched stop -> the trade simply lost.
+        if abs(pos.stop_px - init_stop) <= max(init_stop, 1.0) * 1e-6:
+            return "initial_stop"
+        # It moved, so it moved in our favour (both ratchets only ever improve
+        # it). Breakeven parks at entry plus the round trip; anything further
+        # is the trail following the high-water mark.
+        buffer = 1 + 2 * self.fees.taker_rate
+        be = (pos.entry_px * buffer if pos.side == "long"
+              else pos.entry_px / buffer)
+        if abs(pos.stop_px - be) <= max(be, 1.0) * 1e-3:
+            return "breakeven_stop"
+        return "trail_stop"
+
     def _synthesize_orphan_close(self, coin: str, c: dict):
         """Rebuild the position a close fill implies, when the round trip
         happened entirely between two reconciles.
@@ -3234,10 +3382,28 @@ class Engine:
         return position
 
     def reconcile_dry(self, marks: dict) -> None:
-        """Paper brackets: the engine IS the venue. Trigger fills at bracket px."""
+        """Paper brackets: the engine IS the venue. Trigger fills at bracket px.
+
+        Scale-out is modelled here too. Dry mode exists to rehearse the trade
+        live would place, so a paper book that only ever closed all-or-nothing
+        would report a different strategy from the one running — the F1 lesson
+        of 2026-09-07, where the paper adapter ignored the approved lot and
+        modelled a trade the live path never sent."""
         for pos in self.state.open_positions():
             mark = marks.get(pos.market)
             if mark is None:
+                continue
+            plan = self._scale_out_for(pos)
+            if plan is not None and bracket_hit(
+                    pos.side, mark, None, plan.tp1_px) == "tp":
+                px = plan.tp1_px
+                pnl = realized_pnl(pos.side, pos.entry_px, px, plan.tp1_size)
+                self.state.record_partial_close(pos, plan.tp1_size, px, pnl, "tp")
+                self.state.update_size(pos.id, plan.runner_size)
+                self.state.mark_scaled_out(pos.id)
+                self.notify.send(
+                    f"partial close {pos.market} (tp tranche at "
+                    f"+{plan.at_r:g}R): -{plan.tp1_size:g} (pnl ${pnl:+.2f})")
                 continue
             hit = bracket_hit(pos.side, mark, pos.stop_px, pos.tp_px)
             if hit is None:
@@ -3245,7 +3411,8 @@ class Engine:
             px = pos.stop_px if hit == "sl" else pos.tp_px
             pnl = realized_pnl(pos.side, pos.entry_px, px, pos.size,
                                fee_rate=self.fees.taker_rate)
-            self.state.close_position(pos.id, hit, px, pnl)
+            self.state.close_position(pos.id, hit, px, pnl,
+                                      exit_kind=self._exit_kind(pos, hit))
             self.guard.cooldown_after_close(pos.market, hit, pnl=pnl)
             self.notify.send(fmt_close(pos.market, hit, px, pnl))
 
@@ -3376,6 +3543,11 @@ class Engine:
                 self.state.record_partial_close(pos, c["sz"], c["px"], pnl, reason)
                 self.state.update_size(pos.id, pos.size - c["sz"])
                 self.state.add_entry_fee(pos.id, -partial_entry_fee)
+                if reason == "tp":
+                    # A tranche has paid. The remainder is a runner: it is no
+                    # longer dead money for the time stop, and its brackets must
+                    # not be split a second time.
+                    self.state.mark_scaled_out(pos.id)
                 for tid in c["tids"]:
                     self.state.mark_fill(tid)
                 self.notify.send(
@@ -3385,7 +3557,8 @@ class Engine:
             reason = self._close_reason(pos, c)
             pnl = c["pnl"] - c["fee"] - entry_fee
             self.adapter.cancel_brackets(coin)
-            self.state.close_position(pos.id, reason, c["px"], pnl)
+            self.state.close_position(pos.id, reason, c["px"], pnl,
+                                      exit_kind=self._exit_kind(pos, reason))
             self.guard.cooldown_after_close(coin, reason, pnl=pnl)
             for tid in c["tids"]:
                 self.state.mark_fill(tid)

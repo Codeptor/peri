@@ -442,3 +442,67 @@ def test_zero_size_resting_entry_refuses_before_touching_the_venue():
     with pytest.raises(RuntimeError, match="rounds to 0"):
         a.place_resting_entry(approved(entry_px=97.5, resting=True), size=0.0)
     assert ex.orders == []
+
+
+# -- scale-out: the target splits, the stop never does ------------------------
+
+def scale_out(**kw):
+    from peri.risk import ScaleOut
+    base = dict(tp1_px=101.0, tp1_size=0.07, runner_size=0.08, at_r=1.0)
+    base.update(kw)
+    return ScaleOut(**base)
+
+
+def test_a_market_open_arms_a_full_size_stop_and_two_target_tranches():
+    a, ex, _ = mk()
+    a.open(approved(scale_out=scale_out()), mark=100.0)
+
+    kinds = [o[0] for o in ex.orders]
+    assert kinds == ["market_open", "order", "order", "order"]
+    sl, tp1, tp2 = ex.orders[1:]
+    assert sl[5]["trigger"]["tpsl"] == "sl"
+    # the stop stays FULL size: until a tranche fills the whole position is
+    # still at risk, and a stop sized to the runner leaves the rest naked
+    assert sl[3] == 0.15
+    assert tp1[5]["trigger"]["tpsl"] == "tp" and tp1[5]["trigger"]["triggerPx"] == 101.0
+    assert tp2[5]["trigger"]["tpsl"] == "tp" and tp2[5]["trigger"]["triggerPx"] == 103.0
+    assert abs((tp1[3] + tp2[3]) - 0.15) < 1e-9, "tranches must sum to the approved lot"
+    assert all(o[6] is True for o in ex.orders[1:])          # every leg reduce-only
+    assert all(b == TRENCH_BUILDER for b in ex.builders)
+
+
+def test_a_resting_entry_attaches_both_tranches_in_the_same_signed_action():
+    a, ex, _ = mk()
+    out = a.place_resting_entry(
+        approved(entry_px=97.5, resting=True, scale_out=scale_out()), size=0.15)
+
+    _kind, orders, grouping = ex.orders[0]
+    assert grouping == "normalTpsl"
+    assert len(orders) == 4                     # entry + stop + two targets
+    entry, sl, tp1, tp2 = orders
+    assert entry["reduce_only"] is False and entry["sz"] == 0.15
+    assert sl["order_type"]["trigger"]["tpsl"] == "sl" and sl["sz"] == 0.15
+    assert tp1["order_type"]["trigger"]["triggerPx"] == 101.0 and tp1["sz"] == 0.07
+    assert tp2["order_type"]["trigger"]["triggerPx"] == 103.0 and tp2["sz"] == 0.08
+    assert out["children"] == [102, 103, 104]
+
+
+def test_without_a_plan_the_single_full_size_target_is_unchanged():
+    a, ex, _ = mk()
+    a.open(approved(), mark=100.0)
+    assert [o[0] for o in ex.orders] == ["market_open", "order", "order"]
+    assert all(o[3] == 0.15 for o in ex.orders[1:])
+
+
+def test_replacing_brackets_preserves_an_unfilled_tranche():
+    """The trail arms at the same R the tranche banks at, so a replacement that
+    dropped the split would collapse it in the common case, not a corner one."""
+    a, ex, _ = mk()
+    pos = Position(1, "SOL", "long", 100.0, 0.15, 15.0, 10.0, "isolated",
+                   99.0, 103.0, 0.8, "own", None, None, "open", 0.0)
+    a.adjust_stop(pos, 100.5, 103.0, scale_out=scale_out())
+
+    triggers = [o for o in ex.orders if o[0] == "order"]
+    assert len(triggers) == 3
+    assert [t[5]["trigger"]["tpsl"] for t in triggers] == ["sl", "tp", "tp"]
+    assert triggers[0][3] == 0.15                            # stop still full size

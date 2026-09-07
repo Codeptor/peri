@@ -103,12 +103,35 @@ time_stop_min_r = 0.5
 # reaches inside a position's life. The RR>=2 floor against a 2% minimum stop
 # FORCES targets like that, so the exit has to come from the stop following the
 # move, not from the target being hit.
-trail_start_r = 0.5                 # start trailing once this far in front (0 = off)
-trail_atr_mult = 1.0                # stop rides this many ATR15m behind the high-water mark.
-                                    #   1.0, not 1.5: CL's ATR15m is ~0.51%, and at 10x the
-                                    #   moves worth capturing are 0.5-0.9% of price. A 1.5x
-                                    #   trail (0.77%) is wider than the whole move and would
-                                    #   never lock anything in.
+#
+# 09-07: the FIRST version of that cure cut the winners it was meant to keep.
+# The band was a raw 1x ATR15m and the trail armed at +0.5R, but the stop is
+# never tighter than 4x ATR (atr_stop_mult), so +0.5R is only ~2x ATR of profit:
+# arming there moved the stop from -4 ATR to +1 ATR in ONE step and left a
+# quarter of an R of room. One ordinary pullback closed the trade at +0.25R
+# while every loser still paid the full -1R. One take-profit in 27 trades is
+# that arithmetic, not variance. The band is now a fraction of the RISK TAKEN,
+# with ATR kept only as the noise floor, and it arms after breakeven has done
+# its job rather than instead of it.
+trail_start_r = 1.0                 # start trailing once this far in front (0 = off). Was 0.5,
+                                    #   which pre-empted breakeven_at_r entirely — the trail
+                                    #   always won the race and breakeven never ran.
+trail_giveback_r = 0.5              # give back at most this fraction of the risk taken, measured
+                                    #   from the high-water mark. On a 4x-ATR stop that is 2x ATR
+                                    #   of room; the old raw-1x-ATR band gave 1x.
+trail_atr_mult = 1.0                # ...and never tighter than this many ATR15m, whatever the R
+                                    #   maths says. This is now a FLOOR on the band, not the band
+                                    #   itself: a trail inside the market's own noise is a
+                                    #   coin-flip exit dressed up as risk management.
+# Scale-out. The rails FORCE distant targets: min_stop_pct 2% x min_rr 2.0 puts
+# every take-profit at least 4% away, roughly 8-9x ATR15m, while time_stop_secs
+# closes anything under +0.5R at 3h. Across 27 live trades to 2026-09-07 exactly
+# ONE take-profit was ever reached. Rather than weaken the RR floor — which
+# exists because 08-28 lost 12.8% on trades that never cleared their costs — the
+# TARGET stays where the analyst put it and part of the position banks on the
+# way. The runner keeps the full-size stop behind it until its tranche fills.
+scale_out_at_r = 1.0                # bank the first tranche this far in front (0 = off)
+scale_out_frac = 0.5                # ...this much of the position. The remainder runs.
 entry_expiry_secs = 7200            # a resting maker entry that never fills is cancelled after 2h
 max_mark_drift_pct = 0.5            # refuse a MARKET entry whose mark moved more than
                                     #   this while the analyst was deciding. The decision
