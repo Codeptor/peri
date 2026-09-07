@@ -8,6 +8,7 @@ past a stop.
 It trades crypto majors on native Hyperliquid plus every configured builder dex:
 equities, commodities and index futures on `xyz`, private-company synthetics on
 `io`. Around 355 markets through one wallet, routed automatically by coin prefix.
+It also trades Lighter.xyz behind `venue = "lighter"` — see Venues below.
 
 > **This moves real money.** `mode = "live"` places real orders on a real
 > account. The repository ships `mode = "dry"`, which paper-trades against live
@@ -65,7 +66,7 @@ Hyperliquid account, and an OpenAI-compatible chat endpoint.
 git clone <this repo> peri && cd peri
 uv sync --group dev
 cp .env.example .env && chmod 600 .env   # then fill it in
-uv run --group dev pytest -q             # 453 tests, no network
+uv run --group dev pytest -q             # 483 tests, no network
 ```
 
 **Hyperliquid.** Mint an agent wallet that can sign orders but cannot withdraw:

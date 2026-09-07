@@ -5,8 +5,8 @@
 # which Telegram group, which operator. Those read from .env (see .env.example),
 # so this file can be committed and shared without carrying whose money it is.
 #
-# .env overrides, when set: PERI_MODE, HL_NETWORK, TG_GROUP_ID, TG_CONTROL_USER,
-# TG_CALLERS, TG_NOTIFY_CHAT_ID.
+# .env overrides, when set: PERI_MODE, PERI_VENUE, HL_NETWORK, TG_GROUP_ID,
+# TG_CONTROL_USER, TG_CALLERS, TG_NOTIFY_CHAT_ID, LIGHTER_ACCOUNT_INDEX.
 #
 # mode = "dry" paper-trades against live mainnet data. Flip to "live" only when
 # you have read docs/superpowers/manual-trading-runbook.md and mean it: live

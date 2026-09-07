@@ -7,7 +7,8 @@ nothing about the project.
 
 **peri** is an autonomous LLM perpetual-futures trader for Hyperliquid, trading
 through **Trench** (a builder on HL — every order carries the Trench builder fee
-and the account is the owner's Trench wallet). One Python daemon, one brain:
+and the account is the owner's Trench wallet). It also trades Lighter.xyz
+behind `venue = "lighter"` (HL stays the default). One Python daemon, one brain:
 
 - **Universe**: crypto majors on native HL (`BTC ETH SOL HYPE XRP DOGE`) plus
   every configured **builder dex** (`universe.dexes = ["xyz", "io"]`): equities,
@@ -15,6 +16,15 @@ and the account is the owner's Trench wallet). One Python daemon, one brain:
   synthetics on `io` (`io:ANTH`). ~355 markets, mainnet-only, one wallet,
   automatic routing by coin prefix. Trench is a *builder* on HL, so any dex HL
   lists is reachable with the same builder code — the limit is config, not venue.
+- **Venues**: `venue = "hl"` (default) trades HL as above. `venue = "lighter"`
+  swaps in `lighter_adapter.py` (grouped OTOCO entries whose legs inherit the
+  fill, in-place stop ratchet), `lighter_market.py` (same engine surface over
+  Lighter REST), and the `ZERO` fee schedule — analyst, gates, sizing, ledger
+  and memory move unchanged. Configure plain Lighter symbols (`ETH`, `NVDA`,
+  `ANTHROPIC`); ambiguous HL names (`xyz:SKHX`, `xyz:SP500`, inverted-FX pairs)
+  stay unmapped and raise like unknown markets. Known v1 gaps: Lighter exposes
+  no per-market funding rate (reads zero = unavailable), and its names carry no
+  session mapping, so non-crypto markets trade without a home-hours check.
 - **Every market keeps ITS OWN session** (`risk.py`): Globex for commodities and
   index futures (Sun 18:00 ET → Fri 17:00 ET, daily 17:00 halt), the home
   exchange for foreign equities (KRX/TSE/HKEX — `xyz:SKHX` is the largest market
@@ -75,6 +85,10 @@ and the account is the owner's Trench wallet). One Python daemon, one brain:
   to be booked gross of what it cost to get in. The schedule has exactly ONE
   definition, `peri/fees.py` (it had drifted into three copies: router's
   constants, literals inlined in `risk.gate_open`, and `market.close_fee_rate`).
+  Per-venue pricing lives in the same module as `FeeSchedule`: `HL_SCHEDULE`
+  and `ZERO` (Lighter standard tier, no maker/taker fee). `Guard` and `Engine`
+  take one and default to HL, so a zero-fee venue prices at zero with no
+  special case at any call site.
 - **The engine manages positions without the LLM**: breakeven at +1R (stop →
   entry + round-trip fees) and a time stop at 3h below +0.5R.
 - **Wakes are price-driven**, not just scheduled: `pricewatch.py` polls marks
@@ -145,9 +159,14 @@ src/peri/          the daemon (hatchling package, src layout)
                    every order, dex-abstraction, segregated-collateral equity
   hl_client.py     SDK client construction (agent key, dex-aware on mainnet)
   hl_sizing.py     HL tick rules (≤5 sig figs, ≤6−szDecimals decimals)
+  lighter_adapter.py  live Lighter executor: one-action OTOCO entries, in-place
+                   ratchet, HL-shaped normalization so the engine is untouched
+  lighter_market.py   Lighter REST data layer on the same engine surface
+                   (meta/ctxs/candles/features/candidates) + symbol aliases
+  lighter_sync.py  one background event loop driving the async SDK
   router.py        Adapter protocol + DryRunAdapter (paper fills)
-  fees.py          the fee schedule, ONE definition (imports nothing from peri,
-                   so risk/router/market can all depend on it)
+  fees.py          HL_SCHEDULE + ZERO FeeSchedules, ONE definition (imports
+                   nothing from peri, so risk/engine can all depend on it)
   feed.py          telethon ingest: raw msgs stored, callers flagged, wake event;
                    attached images transcribed at ingest via vision.py
   vision.py        the eye: one bounded vision call turns a posted chart into
@@ -158,7 +177,7 @@ src/peri/          the daemon (hatchling package, src layout)
   pricewatch.py    cheap mark poller -> price-triggered analyst wakes
   notifier.py      stdout + optional Telegram bot alerts (UTC+IST stamps)
   config.py        config.toml + .env (.env file wins over stale shell env)
-tests/             pytest suite (453 tests, no network — Trench/HL fetchers are
+tests/             pytest suite (483 tests, no network — Trench/HL/Lighter fetchers are
                    injected on the Engine so the suite stays offline; fixtures/messages.py has
                    synthetic message-shape fixtures)
 config.toml        runtime config (mode, universe, risk knobs, analyst, news)
@@ -185,7 +204,7 @@ archive/           RETIRED systems, kept for reference: kestreld (Rust paper
 ## Build and test
 
 ```bash
-uv run --group dev pytest -q               # 453 tests, must stay green
+uv run --group dev pytest -q               # 483 tests, must stay green
 uv run --group dev ruff check src tests    # lint (line-length 110)
 uv run peri --once                         # one real decision cycle (dry: paper)
 uv run peri                                # the daemon (telegram feed + loop)
