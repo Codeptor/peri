@@ -4,9 +4,42 @@ The LLM returns strict JSON: {"market_view": "...", "actions": [...]}. Anything
 that fails validation is a retry, then a loud AnalystError. No degraded parse.
 """
 
+import re
 from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+# Numeric claims a lesson must not carry, because the digest already computes
+# them and a frozen copy goes stale: "56% win", "8 trades", "avg +0.20R",
+# "won 3 of 4", "-$24.98 net".
+# Deliberately NOT a pydantic validator: a Decision is validated as a whole, so
+# raising here would fail the entire decision — including the trades in it — and
+# burn two retries before a loud AnalystError. A stale lesson is worth a refusal,
+# never a skipped cycle. Enforced in Engine.exec_remember, which already treats a
+# bad lesson as free to reject.
+_STAT_CLAIM = re.compile(
+    r"""(\d+(?:\.\d+)?\s*%\s*(?:win|wr|loss)
+      | (?:win\s*rate|winrate)\s*(?:of|:|=|\s)\s*\d
+      | (?:win|won|wins|lose|lost|loses)\w*\b[^.%]{0,12}?\d+(?:\.\d+)?\s*%
+      | [+-]?\d+(?:\.\d+)?\s*R\b\s*(?:avg|average|per\s+trade)
+      | (?:avg|average|mean)\s*(?:of\s*)?[+-]?\d+(?:\.\d+)?\s*R\b
+      | \b\d+\s*(?:of|/|out\s+of)\s*\d+\s*(?:trade|win|loss|closed)
+      | \b\d+\s+(?:trades|closes|closed\s+trades)\b
+      )""",
+    re.IGNORECASE | re.VERBOSE,
+)
+
+def restates_a_statistic(lesson: str) -> bool:
+    """True when a lesson restates the measured record.
+
+    The digest is recomputed from the ledger every cycle and cannot be wrong. A
+    lesson is frozen when written and silently rots: by 2026-09-07 the corpus
+    held six versions of the long/short split ("shorts 67% / longs 33%",
+    "shorts 80%", ...) against a measured 56%/39%, and every stale one was
+    still replayed into the prompt as hard-won fact. Lessons stay CAUSAL; the
+    numbers come from the one place that recomputes them."""
+    return bool(_STAT_CLAIM.search(lesson))
+
 
 Side = Literal["long", "short"]
 MarginMode = Literal["cross", "isolated"]

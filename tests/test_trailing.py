@@ -6,6 +6,15 @@ returned. Its take-profit sat at 89.5, +4.56% away, about 9x the market's own
 ATR15m of 0.49%. The RR>=2.0 floor against a 2% minimum stop FORCES a target
 that far out, so on anything short of a runaway move the position round-trips
 to its stop rather than ever reaching the target.
+
+2026-09-07, the correction to that correction: the first trail was a raw
+1x-ATR band armed at +0.5R. But the stop is never tighter than 4x ATR
+(atr_stop_mult), so +0.5R is only ~2x ATR of profit — arming there moved the
+stop from -4 ATR to +1 ATR in ONE step and left a quarter of an R of room. One
+ordinary pullback closed the trade at +0.25R while every loser still paid the
+full -1R. One take-profit in 27 live trades was that arithmetic, not variance.
+The band is now a fraction of the RISK TAKEN (trail_giveback_r), with ATR kept
+only as its noise floor.
 """
 
 
@@ -13,10 +22,12 @@ from tests.test_engine import mk
 
 
 def setup(tmp_path, *, side="long", entry=85.6, stop=83.8, tp=89.5, atr=0.49,
-          trail_start_r=0.5, trail_atr_mult=1.5, breakeven=1.0):
+          trail_start_r=0.5, trail_atr_mult=1.5, breakeven=1.0,
+          trail_giveback_r=0.5):
     eng, state, notes, _ = mk(tmp_path, [{"actions": []}])
     eng.cfg.risk.trail_start_r = trail_start_r
     eng.cfg.risk.trail_atr_mult = trail_atr_mult
+    eng.cfg.risk.trail_giveback_r = trail_giveback_r
     eng.cfg.risk.breakeven_at_r = breakeven
     eng.cfg.risk.time_stop_secs = 0
     eng._features_cache["xyz:CL"] = {"atr15m_pct": atr}
@@ -33,12 +44,31 @@ def stop_of(state, pos_id):
 
 def test_the_stop_follows_the_high_water_mark(tmp_path):
     eng, state, _notes, pos = setup(tmp_path)
-    # +0.92% to the real peak: 1.8 risk, so 0.788 move = +0.44R... push further
     eng.manage_positions({"xyz:CL": 87.0})       # +1.4/1.8 = +0.78R, past 0.5R
     trailed = stop_of(state, pos.id)
-    # 1.5 x 0.49% of 87.0 = 0.639 behind the peak
-    assert trailed is not None and abs(trailed - (87.0 - 0.639)) < 0.05, trailed
+    # risk is 85.6-83.8 = 1.8, so the giveback band is 0.5 x 1.8 = 0.9, wider
+    # than the 1.5 x 0.49% x 87.0 = 0.639 ATR floor. The band is the wider one.
+    assert trailed is not None and abs(trailed - (87.0 - 0.9)) < 0.05, trailed
     assert trailed > 85.6, "must lock in profit above entry"
+
+
+def test_the_band_is_a_fraction_of_risk_not_a_raw_atr_count(tmp_path):
+    """The defect this file's second docstring paragraph describes.
+
+    With a 4x-ATR stop, a 1x-ATR band leaves a quarter of an R of room. The
+    giveback is measured against what was staked, so it stays proportional to
+    the risk whatever the market's ATR happens to be."""
+    # stop 4x ATR away: ATR 0.45% of 85.6 = 0.385, so a 1.54 stop distance
+    eng, state, _notes, pos = setup(tmp_path, stop=85.6 - 1.54, atr=0.45,
+                                    trail_atr_mult=1.0, trail_giveback_r=0.5)
+    eng.manage_positions({"xyz:CL": 85.6 + 1.54 * 2})   # +2R
+    trailed = stop_of(state, pos.id)
+    peak = 85.6 + 1.54 * 2
+    # the ATR floor would be 1.0 x 0.45% x 88.68 = 0.399 -> a stop at +1.14R.
+    # the giveback band is 0.5 x 1.54 = 0.77 -> a stop at +1.5R. Wider wins.
+    assert abs(trailed - (peak - 0.77)) < 0.02, trailed
+    locked_r = (trailed - 85.6) / 1.54
+    assert locked_r >= 1.4, f"a 2R peak must not be trailed back to {locked_r:.2f}R"
 
 
 def test_the_stop_never_retreats_when_price_falls_back(tmp_path):
@@ -71,17 +101,48 @@ def test_a_short_trails_downward(tmp_path):
     eng.manage_positions({"xyz:CL": 84.2})       # +1.4/1.8 = +0.78R
     trailed = stop_of(state, pos.id)
     assert trailed is not None and trailed < 85.6, trailed
-    assert abs(trailed - (84.2 + 84.2 * 0.0049 * 1.5)) < 0.05, trailed
+    # same 0.9 giveback band, added rather than subtracted
+    assert abs(trailed - (84.2 + 0.9)) < 0.05, trailed
 
 
-def test_a_missing_atr_leaves_the_stop_alone_rather_than_guessing(tmp_path):
-    """The trail width has to clear this market's own noise. With no ATR there
-    is no honest width, and protection already in place must not be replaced by
-    a guess — but breakeven still applies at its own threshold."""
+def test_a_cold_feature_cache_no_longer_silently_disables_the_trail(tmp_path):
+    """This assertion is the REVERSE of what it was before 2026-09-07, and the
+    reversal is the point.
+
+    The old contract was "no ATR, no trail". But _features_cache is only filled
+    by a full cycle, so that rule meant the trail quietly vanished on every
+    other path — which is how trailing shipped to production on 2026-09-05
+    having never once trailed. The risk distance is known from the ledger for
+    every position peri opened, so an honest band exists without any ATR at
+    all; ATR is only the floor."""
     eng, state, _notes, pos = setup(tmp_path, breakeven=99)
     eng._features_cache["xyz:CL"] = {}
     eng.manage_positions({"xyz:CL": 87.0})
+    assert abs(stop_of(state, pos.id) - (87.0 - 0.9)) < 0.05
+
+
+def test_the_trail_falls_back_to_the_atr_captured_at_entry(tmp_path):
+    """entry_atr_pct is recorded on every position peri opens. When the live
+    cache is cold it is a far better floor than none."""
+    eng, state, _notes, pos = setup(tmp_path, breakeven=99, trail_giveback_r=0.0)
+    state.db.execute("UPDATE positions SET entry_atr_pct=? WHERE id=?", (0.49, pos.id))
+    state.db.commit()
+    eng._features_cache["xyz:CL"] = {}
+    eng.manage_positions({"xyz:CL": 87.0})
+    # giveback disabled, so the band is purely the stored-ATR floor
+    assert abs(stop_of(state, pos.id) - (87.0 - 1.5 * 0.0049 * 87.0)) < 0.05
+
+
+def test_with_neither_a_risk_unit_nor_an_atr_the_stop_is_left_alone(tmp_path):
+    """Only now — with no width obtainable from either source — is refusing to
+    move the stop the honest answer, and it must say so out loud."""
+    eng, state, notes, pos = setup(tmp_path, breakeven=99, trail_giveback_r=0.0)
+    eng._features_cache["xyz:CL"] = {}
+    state.db.execute("UPDATE positions SET entry_atr_pct=NULL WHERE id=?", (pos.id,))
+    state.db.commit()
+    eng.manage_positions({"xyz:CL": 87.0})
     assert stop_of(state, pos.id) == 83.8
+    assert any("trail unavailable" in line for line in notes.lines), notes.lines
 
 
 def test_the_trail_never_lands_on_the_wrong_side_of_the_mark(tmp_path):

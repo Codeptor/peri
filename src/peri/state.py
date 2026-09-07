@@ -39,11 +39,13 @@ CREATE TABLE IF NOT EXISTS positions (
     entry_style TEXT, entry_range_pos REAL, entry_atr_pct REAL, entry_trigger TEXT,
     entry_fee REAL NOT NULL DEFAULT 0,
     peak_px REAL,
+    mfe_r REAL, mae_r REAL,
+    scaled_out INTEGER NOT NULL DEFAULT 0,
     conviction REAL, source TEXT NOT NULL,
     rationale TEXT, invalidation TEXT,
     status TEXT NOT NULL DEFAULT 'open',
     opened_ts REAL NOT NULL, closed_ts REAL,
-    close_reason TEXT, close_px REAL, realized_pnl REAL);
+    close_reason TEXT, close_px REAL, realized_pnl REAL, exit_kind TEXT);
 CREATE TABLE IF NOT EXISTS decisions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts REAL NOT NULL, trigger TEXT NOT NULL,
@@ -208,7 +210,23 @@ class State:
         for col, decl in (("entry_style", "TEXT"), ("entry_range_pos", "REAL"),
                           ("entry_atr_pct", "REAL"), ("entry_trigger", "TEXT"),
                           ("entry_fee", "REAL NOT NULL DEFAULT 0"),
-                          ("peak_px", "REAL")):
+                          ("peak_px", "REAL"),
+                          # excursion in R, tracked live: how far the trade ran
+                          # (mfe) and how far it went against us first (mae).
+                          # NULL on pre-migration rows — never back-filled from
+                          # close price, which would report the exit, not the
+                          # excursion.
+                          ("mfe_r", "REAL"), ("mae_r", "REAL"),
+                          # 1 once a take-profit tranche has banked. Drives both
+                          # the time-stop exemption (a position that has already
+                          # paid is not dead money) and bracket replacement (the
+                          # remainder is a runner and must not be re-split).
+                          ("scaled_out", "INTEGER NOT NULL DEFAULT 0"),
+                          # which mechanism ACTUALLY ended it. close_reason
+                          # collapses breakeven/trail/real stop-outs into 'sl'
+                          # and time stops into 'analyst', so the measured
+                          # record could not show the bot its own worst habit.
+                          ("exit_kind", "TEXT")):
             if col not in position_cols:
                 self.db.execute(f"ALTER TABLE positions ADD COLUMN {col} {decl}")
         tg_cols = {r["name"] for r in self.db.execute("PRAGMA table_info(tg_messages)")}
@@ -314,6 +332,48 @@ class State:
             self.db.commit()
         return best
 
+    def update_excursion(self, pos_id: int, r: float) -> None:
+        """Widen the recorded MAE/MFE for an open position, in units of R.
+
+        Called for EVERY open position on every management pass, not only ones
+        far enough in front to trail. `peak_px` cannot serve this purpose: it is
+        trail machinery, seeded at entry, only advanced once a trade is past
+        `trail_start_r`, and never read after close. Without MAE/MFE there is no
+        way to ask the two questions that decide exit geometry — how much of its
+        best move did a winner give back, and how far did an eventual winner go
+        against us first."""
+        row = self.db.execute(
+            "SELECT mfe_r, mae_r FROM positions WHERE id=?", (pos_id,)).fetchone()
+        if row is None:
+            return
+        mfe = row["mfe_r"]
+        mae = row["mae_r"]
+        new_mfe = r if mfe is None else max(float(mfe), r)
+        new_mae = r if mae is None else min(float(mae), r)
+        if new_mfe == mfe and new_mae == mae:
+            return
+        self.db.execute("UPDATE positions SET mfe_r=?, mae_r=? WHERE id=?",
+                        (new_mfe, new_mae, pos_id))
+        self.db.commit()
+
+    def mark_scaled_out(self, pos_id: int) -> None:
+        self.db.execute("UPDATE positions SET scaled_out=1 WHERE id=?", (pos_id,))
+        self.db.commit()
+
+    def has_scaled_out(self, pos_id: int) -> bool:
+        """True once a take-profit tranche has filled on this position."""
+        r = self.db.execute(
+            "SELECT scaled_out FROM positions WHERE id=?", (pos_id,)).fetchone()
+        return bool(r and r["scaled_out"])
+
+    def set_exit_kind(self, pos_id: int, exit_kind: str) -> None:
+        """Record which mechanism ended the position. Written at close, beside
+        close_reason rather than instead of it — close_reason says which venue
+        bracket filled, exit_kind says WHY that bracket was where it was."""
+        self.db.execute("UPDATE positions SET exit_kind=? WHERE id=?",
+                        (exit_kind, pos_id))
+        self.db.commit()
+
     def update_brackets(self, pos_id: int, stop_px: Optional[float],
                         tp_px: Optional[float]) -> None:
         self.db.execute(
@@ -368,11 +428,16 @@ class State:
         self.db.commit()
 
     def close_position(self, pos_id: int, reason: str, close_px: float,
-                       realized_pnl: float) -> None:
+                       realized_pnl: float,
+                       exit_kind: Optional[str] = None) -> None:
+        """`reason` is which venue bracket filled; `exit_kind` is why that
+        bracket sat where it did. They are written together so a close can
+        never be recorded without its mechanism."""
         self.db.execute(
             "UPDATE positions SET status='closed', closed_ts=?, close_reason=?,"
-            " close_px=?, realized_pnl=? WHERE id=?",
-            (time.time(), reason, close_px, realized_pnl, pos_id))
+            " close_px=?, realized_pnl=?, exit_kind=COALESCE(?,exit_kind)"
+            " WHERE id=?",
+            (time.time(), reason, close_px, realized_pnl, exit_kind, pos_id))
         self.db.commit()
 
     def record_partial_close(self, pos: "Position", size: float, close_px: float,
@@ -945,6 +1010,16 @@ class State:
             "SELECT init_stop_px FROM positions WHERE id=?", (pos_id,)).fetchone()
         return None if r is None else r["init_stop_px"]
 
+    def entry_atr(self, pos_id: int) -> Optional[float]:
+        """ATR15m% captured at the decision. The trail's fallback when the live
+        feature cache is cold: it is only populated by a full cycle, so a trail
+        that reads it alone silently stops trailing (2026-09-05: it never
+        trailed in production at all). A stale ATR is a far better band than
+        no band."""
+        r = self.db.execute(
+            "SELECT entry_atr_pct FROM positions WHERE id=?", (pos_id,)).fetchone()
+        return None if r is None else r["entry_atr_pct"]
+
     def claim_position(self, pos_id: int, *, conviction: Optional[float],
                        rationale: Optional[str], invalidation: Optional[str],
                        stop_px: Optional[float], tp_px: Optional[float],
@@ -1111,7 +1186,8 @@ class State:
         rows = [dict(r) for r in self.db.execute(
             f"SELECT market, side, entry_px, close_px, size, realized_pnl, close_reason,"
             f" conviction, opened_ts, closed_ts, init_stop_px, entry_style,"
-            f" entry_range_pos, entry_atr_pct FROM positions WHERE {where}", params)]
+            f" entry_range_pos, entry_atr_pct, entry_trigger, entry_fee,"
+            f" exit_kind, mfe_r, mae_r FROM positions WHERE {where}", params)]
 
         def bucket(rows_in: list[dict]) -> dict:
             n = len(rows_in)
@@ -1122,6 +1198,10 @@ class State:
             pnl = sum(r["realized_pnl"] for r in rows_in)
             rs = []
             holds = []
+            mfes = []
+            givebacks = []
+            maes = []
+            fees = 0.0
             for r in rows_in:
                 # a stop within 0.05% of entry is not a risk unit — dividing by it
                 # renders "avg +999.99R" into the prompt
@@ -1130,15 +1210,38 @@ class State:
                               >= 5e-4)
                 risk = (abs(r["entry_px"] - r["init_stop_px"]) * r["size"]
                         if meaningful else None)
+                realized_r = None
                 if risk:
-                    rs.append(r["realized_pnl"] / risk)
+                    realized_r = r["realized_pnl"] / risk
+                    rs.append(realized_r)
+                fees += float(r.get("entry_fee") or 0.0)
+                mfe = r.get("mfe_r")
+                mae = r.get("mae_r")
+                if isinstance(mae, (int, float)):
+                    maes.append(float(mae))
+                if isinstance(mfe, (int, float)):
+                    mfes.append(float(mfe))
+                    # How much of its best move the trade handed back. This is
+                    # the number that exposes an exit cutting winners short —
+                    # avg_r alone cannot distinguish "never worked" from
+                    # "worked, then gave it all back".
+                    if realized_r is not None:
+                        givebacks.append(float(mfe) - realized_r)
                 if r["closed_ts"] and r["opened_ts"]:
                     holds.append((r["closed_ts"] - r["opened_ts"]) / 60.0)
             holds.sort()
+
+            def mean(xs):
+                return (sum(xs) / len(xs)) if xs else None
+
             return {
                 "n": n, "wins": wins, "win_rate": wins / n, "pnl": pnl,
-                "avg_r": (sum(rs) / len(rs)) if rs else None,
+                "avg_r": mean(rs),
                 "median_hold_mins": holds[len(holds) // 2] if holds else None,
+                "avg_mfe_r": mean(mfes),
+                "avg_mae_r": mean(maes),
+                "avg_giveback_r": mean(givebacks),
+                "entry_fees": fees,
             }
 
         def group(key) -> dict:
@@ -1159,6 +1262,35 @@ class State:
                 return "bottom of range (<=0.20)"
             return "mid range"
 
+        def conviction_label(r: dict) -> Optional[str]:
+            c = r.get("conviction")
+            if not isinstance(c, (int, float)):
+                return None
+            if c >= 0.85:
+                return "conviction 0.85+"
+            if c >= 0.80:
+                return "conviction 0.80-0.85"
+            return "conviction 0.75-0.80"
+
+        def atr_label(r: dict) -> Optional[str]:
+            a = r.get("entry_atr_pct")
+            if not isinstance(a, (int, float)) or a <= 0:
+                return None
+            if a >= 1.5:
+                return "high vol (ATR15m >=1.5%)"
+            if a >= 0.7:
+                return "mid vol (0.7-1.5%)"
+            return "low vol (<0.7%)"
+
+        # close_reason is free text on some paths, and an unnormalised string
+        # ("stop 1.413 (+1R ratchet) filled @ 1.4129") became its own bucket of
+        # n=1 in the 09-07 export, which reads as a category rather than a typo.
+        known_reasons = {"sl", "tp", "external", "analyst", "operator", "venue"}
+
+        def reason_label(r: dict) -> str:
+            reason = (r["close_reason"] or "?").strip()
+            return reason if reason in known_reasons else "other"
+
         by_market = group(lambda r: r["market"])
         # sign-filter, or with few traded markets the SAME market appears in both
         # lists and a winner is rendered as "markets that have cost you most"
@@ -1171,7 +1303,14 @@ class State:
             "by_entry_style": group(lambda r: r.get("entry_style") or "market (unknown)"),
             "by_side": group(lambda r: r["side"]),
             "by_range_position": group(range_label),
-            "by_close_reason": group(lambda r: r["close_reason"] or "?"),
+            "by_close_reason": group(reason_label),
+            # which MECHANISM ended the trade, as opposed to which bracket
+            # filled — a trail-out and a real stop-out are both close_reason
+            # 'sl' and mean opposite things.
+            "by_exit_kind": group(lambda r: r.get("exit_kind") or "unrecorded"),
+            "by_conviction": group(conviction_label),
+            "by_trigger": group(lambda r: r.get("entry_trigger") or None),
+            "by_volatility": group(atr_label),
             "worst_markets": dict(worst),
             "best_markets": dict(best),
         }
