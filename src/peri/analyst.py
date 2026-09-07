@@ -17,6 +17,7 @@ import httpx
 from pydantic import ValidationError
 
 from peri.config import AnalystCfg, RiskCfg
+from peri.market import expected_move_pct
 from peri.models import ChatResponse, Decision
 from peri.risk import LIQ_SAFETY, MAX_ENTRY_OFFSET_PCT, isolated_liq_distance
 
@@ -137,6 +138,21 @@ HARD RULES (the engine enforces them; violating them wastes the action):
   is short and is paying to stay there, which squeezes violently on any good
   news. Deeply positive means the opposite. Weigh it as evidence, not as a
   reason on its own.
+- READ THE STRUCTURE LINE BEFORE YOU PICK A TARGET. 5d-pos and 20d-pos say where
+  this price sits in the range it actually trades; prevday and 20d give the
+  levels that have mattered recently. A target inside that structure is a level
+  the market can reach. A target chosen only to satisfy the RR floor is a number.
+- "plausible move" is this market's own ATR15m extended over the clock. If your
+  take_profit is far beyond the 3h figure, the trade has to survive the time stop
+  to get there — that is a real bet you are making, so make it deliberately, and
+  prefer the nearer structural level when there is one.
+- OI$M is open interest. Rising price on rising OI is new money committing;
+  rising price on FALLING OI is shorts covering, which ends when they are done.
+  spread is the venue's own impact spread in bp: a wide one eats a scalp. premium
+  is mark against oracle — on a builder-dex name whose underlying is shut, a
+  large premium is the synthetic drifting, not the asset moving. rvol compares
+  the latest 15m bar's volume to its recent average: above ~1.5 the move has
+  participation, below ~0.7 it is drift and levels mean less.
 - Close or tighten a position when ITS OWN invalidation condition has triggered.
   The same action withdraws a RESTING ENTRY whose thesis has died before it filled.
 - conviction calibrates to evidence: 0.75 = clear confluence, 0.85+ = exceptional
@@ -410,6 +426,46 @@ def _feature(features: dict, name: str, spec: str, scale: float = 1.0) -> str:
     return format(value / scale, spec)
 
 
+def _structure_line(f: dict) -> str:
+    """The multi-day picture, which the 15m/24h window cannot express.
+
+    Prior-day extremes and the 20-day range are the levels a discretionary
+    trader reaches for first, and until 2026-09-07 the analyst had never seen
+    one — it was choosing 4%-away targets from a 24-hour keyhole."""
+    return ("  structure: 5d-pos " + _feature(f, "range5d_pos", ".2f")
+            + " | 20d-pos " + _feature(f, "range20d_pos", ".2f")
+            + " | vs 24h-mean(1h) " + _feature(f, "trend_1h_pct", "+.2f") + "%"
+            + " | vs 20d-mean " + _feature(f, "trend_20d_pct", "+.2f") + "%"
+            + " | prevday " + _feature(f, "prev_day_lo", "g")
+            + "-" + _feature(f, "prev_day_hi", "g")
+            + " | 20d " + _feature(f, "lo_20d", "g")
+            + "-" + _feature(f, "hi_20d", "g")
+            + " (+" + _feature(f, "to_hi_20d_pct", ".1f")
+            + "%/-" + _feature(f, "to_lo_20d_pct", ".1f") + "%)"
+            + " | ATR1h " + _feature(f, "atr1h_pct", ".2f") + "%"
+            + " | ATR1d " + _feature(f, "atr1d_pct", ".2f") + "%"
+            + " | rvol " + _feature(f, "rvol", ".2f")
+            + " | spread " + _feature(f, "spread_bps", ".1f") + "bp"
+            + " | premium " + _feature(f, "premium_pct", "+.2f") + "%")
+
+
+def _target_budget_line(f: dict) -> str:
+    """What this market plausibly travels before the time stop fires.
+
+    The RR floor against a 2% minimum stop forces targets around 8-9x ATR15m
+    while the time stop closes at 3h. Those two numbers disagree, and nothing
+    in the prompt let the analyst notice — 1 take-profit in 27 trades. Putting
+    the plausible excursion beside the target makes the conflict visible at the
+    moment the target is chosen."""
+    atr = f.get("atr15m_pct")
+    if not isinstance(atr, (int, float)) or atr <= 0:
+        return ""
+    return ("  plausible move: ~" + format(expected_move_pct(atr, 3) or 0, ".2f")
+            + "% in 3h, ~" + format(expected_move_pct(atr, 24) or 0, ".2f")
+            + "% in 24h (this market's own ATR15m). A target beyond the 3h "
+              "figure needs the trade to survive the time stop to reach it.")
+
+
 def _optional(value, spec: str, suffix: str = "") -> str:
     if (isinstance(value, bool) or not isinstance(value, (int, float))
             or not math.isfinite(value)):
@@ -536,6 +592,18 @@ def render_context(bundle: dict, now: Optional[float] = None) -> str:
                  f"{_feature(f, 'r_4h_pct', '+.2f')} | "
                  f"{_feature(f, 'atr15m_pct', '.2f')} | "
                  f"{_feature(f, 'range24h_pos', '.2f')}")
+        if f.get("unavailable"):
+            # A bare "?" told the model nothing and it would then be hard-
+            # refused by the range/ATR gates for trading blind. Say so here,
+            # and skip the structure line rather than print a row of "?".
+            L.append("  FEATURES UNAVAILABLE — its candles did not load. The range "
+                     "and ATR gates REFUSE this market outright; do not plan a "
+                     "trade on it this cycle.")
+        else:
+            L.append(_structure_line(f))
+            budget = _target_budget_line(f)
+            if budget:
+                L.append(budget)
         # What each leverage choice costs you in stop room. An isolated position
         # is liquidated at ~1/L - 1/(2*maxLev), and the guard demands the stop
         # sit comfortably inside that — so on a 20x-max market, 20x leaves less
