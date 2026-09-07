@@ -25,7 +25,8 @@ from peri.models import (Action, AdjustStopAction, CloseAction, OpenAction,
                          RememberAction)
 from peri.notifier import Notifier, fmt_close, fmt_open, fmt_refusal
 from peri.risk import Approved, Guard, Refusal, isolated_liq_distance
-from peri.router import FEE_RATE, Adapter, bracket_hit, realized_pnl
+from peri.fees import FeeSchedule, HL_SCHEDULE
+from peri.router import Adapter, bracket_hit, realized_pnl
 from peri.state import Position, State, dumps_actions
 from pydantic import TypeAdapter
 
@@ -80,7 +81,7 @@ def reserved_order_markets(orders: list[dict]) -> frozenset[str]:
 class Engine:
     def __init__(self, cfg: Config, state: State, market: Market, analyst: Analyst,
                  guard: Guard, adapter: Adapter, notifier: Notifier,
-                 wake: asyncio.Event):
+                 wake: asyncio.Event, fees: FeeSchedule = HL_SCHEDULE):
         self.cfg = cfg
         self.state = state
         self.market = market
@@ -89,6 +90,7 @@ class Engine:
         self.adapter = adapter
         self.notify = notifier
         self.wake = wake
+        self.fees = fees
         self._wake_trigger = "caller message"
         self._wake_lock = threading.Lock()
         self._day_halt_announced: dict[str, bool] = {}
@@ -1372,8 +1374,8 @@ class Engine:
             else:
                 tp_gross = (entry_px - canonical.take_profit) * size
                 stop_gross = (canonical.stop - entry_px) * size
-            tp_fees = (entry_px + canonical.take_profit) * size * FEE_RATE
-            stop_fees = (entry_px + canonical.stop) * size * FEE_RATE
+            tp_fees = (entry_px + canonical.take_profit) * size * self.fees.taker_rate
+            stop_fees = (entry_px + canonical.stop) * size * self.fees.taker_rate
             preview = {
                 "kind": "open",
                 "mode": mode,
@@ -1442,7 +1444,7 @@ class Engine:
                 if position.side == "long"
                 else (position.entry_px - mark) * position.size
             )
-            fees = (position.entry_px + mark) * position.size * FEE_RATE
+            fees = (position.entry_px + mark) * position.size * self.fees.taker_rate
             return action, {
                 "kind": "close",
                 "mode": mode,
@@ -2149,7 +2151,8 @@ class Engine:
             )
         close_px = float(output["close_px"])
         pnl = realized_pnl(
-            position.side, position.entry_px, close_px, position.size
+            position.side, position.entry_px, close_px, position.size,
+            fee_rate=self.fees.taker_rate,
         )
         result = {
             "status": "executed",
@@ -2959,7 +2962,7 @@ class Engine:
             if target is None:
                 if cfg.breakeven_at_r <= 0 or r < cfg.breakeven_at_r:
                     continue
-                buffer = 1 + 2 * FEE_RATE
+                buffer = 1 + 2 * self.fees.taker_rate
                 target = (pos.entry_px * buffer if pos.side == "long"
                           else pos.entry_px / buffer)
                 target = format_price(target, mi.sz_decimals)
@@ -3240,7 +3243,8 @@ class Engine:
             if hit is None:
                 continue
             px = pos.stop_px if hit == "sl" else pos.tp_px
-            pnl = realized_pnl(pos.side, pos.entry_px, px, pos.size)
+            pnl = realized_pnl(pos.side, pos.entry_px, px, pos.size,
+                               fee_rate=self.fees.taker_rate)
             self.state.close_position(pos.id, hit, px, pnl)
             self.guard.cooldown_after_close(pos.market, hit, pnl=pnl)
             self.notify.send(fmt_close(pos.market, hit, px, pnl))

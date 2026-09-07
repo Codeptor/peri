@@ -20,10 +20,17 @@ from peri.state import State
 
 
 def build_engine(cfg: Config, wake: asyncio.Event) -> Engine:
+    from peri.fees import HL_SCHEDULE, ZERO
     state = State("peri.db")
-    market = Market(http_post(cfg.hl_network), cfg.universe.dexes)
+    if cfg.venue == "lighter":
+        from peri.lighter_market import LighterMarket
+        market = LighterMarket(cfg.lighter.host)
+        fee_schedule = ZERO
+    else:
+        market = Market(http_post(cfg.hl_network), cfg.universe.dexes)
+        fee_schedule = HL_SCHEDULE
     notifier = Notifier(cfg.tg_bot_token, cfg.notify.chat_id)
-    guard = Guard(cfg.risk, state, cfg.analyst.conviction_min)
+    guard = Guard(cfg.risk, state, cfg.analyst.conviction_min, fees=fee_schedule)
     analyst = Analyst(cfg.analyst, cfg.analyst_api_key, cfg.analyst_base_url,
                       cfg.analyst_model, cfg.analyst.conviction_min, cfg.risk.min_rr,
                       cfg.risk.max_leverage,
@@ -34,19 +41,34 @@ def build_engine(cfg: Config, wake: asyncio.Event) -> Engine:
                       fallback_model=cfg.analyst_fallback_model)
 
     if cfg.mode == "live":
-        from peri.hl_adapter import TRENCH_BUILDER, HyperliquidAdapter
-        from peri.hl_client import build_clients
-        exchange, info, acct = build_clients(cfg)
-        builder = TRENCH_BUILDER if cfg.route_builder_fee else None
-        adapter = HyperliquidAdapter(exchange, info, acct, market, builder=builder,
-                                     slippage=cfg.risk.slippage_pct / 100,
-                                     dexes=cfg.universe.dexes)
-        if cfg.hl_network == "mainnet":
-            adapter.enable_dex_abstraction()
+        if cfg.venue == "lighter":
+            from peri.lighter_adapter import LighterAdapter, SdkOps
+            from peri.lighter_sync import Bridge
+            if not cfg.lighter_api_key:
+                raise RuntimeError(
+                    "live lighter mode needs LIGHTER_API_KEY in .env — "
+                    "generate it at https://app.lighter.xyz/apikeys, index 4+")
+            ops = SdkOps(cfg.lighter.host, cfg.lighter.chain_id,
+                         cfg.lighter.account_index, cfg.lighter.api_key_index,
+                         cfg.lighter_api_key)
+            adapter = LighterAdapter(
+                ops, Bridge(), cfg.lighter.account_index, market,
+                slippage=cfg.risk.slippage_pct / 100)
+        else:
+            from peri.hl_adapter import TRENCH_BUILDER, HyperliquidAdapter
+            from peri.hl_client import build_clients
+            exchange, info, acct = build_clients(cfg)
+            builder = TRENCH_BUILDER if cfg.route_builder_fee else None
+            adapter = HyperliquidAdapter(exchange, info, acct, market, builder=builder,
+                                         slippage=cfg.risk.slippage_pct / 100,
+                                         dexes=cfg.universe.dexes)
+            if cfg.hl_network == "mainnet":
+                adapter.enable_dex_abstraction()
     else:
         adapter = DryRunAdapter(state, cfg.risk.paper_bankroll)
 
-    return Engine(cfg, state, market, analyst, guard, adapter, notifier, wake)
+    return Engine(cfg, state, market, analyst, guard, adapter, notifier, wake,
+                  fees=fee_schedule)
 
 
 async def main(once: bool) -> None:

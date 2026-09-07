@@ -112,6 +112,19 @@ Operator controls, from a phone, authorised to one Telegram user:
 no command that opens a trade. Everything you can do from chat either reduces
 risk or asks the analyst to think again.
 
+## Venues
+
+`venue = "hl"` trades Hyperliquid; `venue = "lighter"` trades Lighter.xyz
+(`PERI_VENUE` in `.env` overrides the file). The analyst, gates, sizing math,
+ledger and memory are venue-agnostic — only the executor, market data layer,
+tick rules and fee schedule change. Lighter support (`src/peri/lighter_*`)
+was built against testnet grouped orders and priced against its zero-fee
+schedule; configure it with plain Lighter symbols (`ETH`, `NVDA`,
+`ANTHROPIC`) and a trading key from https://app.lighter.xyz/apikeys at index
+4+ in `LIGHTER_API_KEY`. Two known v1 gaps: Lighter exposes no per-market
+funding rate over the API, so that input reads zero, and its names carry no
+session mapping, so non-crypto markets trade without a home-hours check.
+
 ## Trading by hand
 
 The daemon can be stopped and the account driven manually with the same rails

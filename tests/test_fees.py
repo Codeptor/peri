@@ -40,6 +40,22 @@ def test_a_resting_entry_pays_the_maker_side_and_a_market_order_the_taker_side()
     assert fees.round_trip_rate(False) == 0.0015
 
 
+def test_schedules_agree_with_the_module_constants():
+    assert fees.HL_SCHEDULE.taker_rate == fees.TAKER_FEE_RATE
+    assert fees.HL_SCHEDULE.maker_rate == fees.MAKER_FEE_RATE
+    assert fees.HL_SCHEDULE.entry_rate(True) == fees.entry_rate(True)
+    assert fees.HL_SCHEDULE.round_trip_rate(False) == fees.round_trip_rate(False)
+
+
+def test_lighter_schedule_is_exactly_zero():
+    assert fees.ZERO.taker_rate == 0.0
+    assert fees.ZERO.maker_rate == 0.0
+    assert fees.ZERO.entry_rate(True) == 0.0
+    assert fees.ZERO.entry_rate(False) == 0.0
+    assert fees.ZERO.round_trip_rate(True) == 0.0
+    assert fees.ZERO.round_trip_rate(False) == 0.0
+
+
 def test_no_module_reintroduces_a_hardcoded_rate():
     """The literals are allowed in peri/fees.py and nowhere else."""
     src = pathlib.Path(__file__).resolve().parents[1] / "src" / "peri"

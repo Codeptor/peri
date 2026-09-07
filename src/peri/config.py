@@ -120,6 +120,14 @@ class NotifyCfg:
 
 
 @dataclass
+class LighterCfg:
+    host: str                   # REST + SDK endpoint (mainnet default)
+    chain_id: int               # 304 on mainnet; the SDK signs against this
+    account_index: int          # your Lighter account index (not a secret)
+    api_key_index: int          # trading key index, 4+ (0-3 are the web clients)
+
+
+@dataclass
 class Config:
     mode: str                      # "dry" | "live"
     hl_network: str                # "testnet" | "mainnet"
@@ -131,12 +139,17 @@ class Config:
     news: NewsCfg
     notify: NotifyCfg
     watch: WatchCfg = None  # type: ignore[assignment]
+    lighter: LighterCfg = None  # type: ignore[assignment]
+    # Defaults last: anything with one lives here so required fields above can
+    # stay required. load_config always passes venue explicitly.
+    venue: str = "hl"              # "hl" | "lighter" — which venue live mode trades
     # secrets (.env)
     tg_api_id: int = 0
     tg_api_hash: str = ""
     tg_bot_token: str = ""
     hl_account: str = ""
     hl_agent_key: str = ""
+    lighter_api_key: str = ""
     analyst_api_key: str = ""
     analyst_base_url: str = ""
     analyst_model: str = ""
@@ -188,6 +201,15 @@ def load_config(path: str = "config.toml", env_path: str = ".env") -> Config:
     mode = ev("PERI_MODE", "").strip() or raw["mode"]
     if mode not in ("dry", "live"):
         raise ValueError(f"mode must be dry|live, got {mode!r}")
+    venue = ev("PERI_VENUE", "").strip() or raw.get("venue", "hl")
+    if venue not in ("hl", "lighter"):
+        raise ValueError(f"venue must be hl|lighter, got {venue!r}")
+    li = raw.get("lighter", {})
+    lighter = LighterCfg(
+        host=str(li.get("host") or "https://mainnet.zklighter.elliot.ai"),
+        chain_id=int(li.get("chain_id", 304)),
+        account_index=evi("LIGHTER_ACCOUNT_INDEX", li.get("account_index", 0)),
+        api_key_index=int(li.get("api_key_index", 4)))
     network = ev("HL_NETWORK", "").strip() or raw["hl_network"]
     if network not in ("testnet", "mainnet"):
         raise ValueError(f"hl_network must be testnet|mainnet, got {network!r}")
@@ -195,8 +217,10 @@ def load_config(path: str = "config.toml", env_path: str = ".env") -> Config:
 
     return Config(
         mode=mode,
+        venue=venue,
         hl_network=network,
         route_builder_fee=bool(raw.get("route_builder_fee", True)),
+        lighter=lighter,
         telegram=TelegramCfg(evi("TG_GROUP_ID", t.get("group_id", 0)),
                              callers or list(t.get("callers", [])),
                              evi("TG_CONTROL_USER", t.get("control_user", 0)),
@@ -253,6 +277,7 @@ def load_config(path: str = "config.toml", env_path: str = ".env") -> Config:
         tg_bot_token=ev("TG_BOT_TOKEN"),
         hl_account=ev("HL_ACCOUNT_ADDRESS"),
         hl_agent_key=ev("HL_AGENT_KEY"),
+        lighter_api_key=ev("LIGHTER_API_KEY"),
         analyst_api_key=ev("ANALYST_API_KEY"),
         analyst_base_url=ev("ANALYST_BASE_URL"),
         analyst_model=ev("ANALYST_MODEL"),

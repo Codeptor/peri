@@ -24,7 +24,7 @@ from typing import Optional, Union
 from zoneinfo import ZoneInfo
 
 from peri.config import RiskCfg
-from peri.fees import round_trip_rate
+from peri.fees import FeeSchedule, HL_SCHEDULE
 from peri.hl_sizing import notional_to_size
 from peri.models import OpenAction
 from peri.state import State
@@ -211,10 +211,12 @@ def us_session_minutes(now: float) -> Optional[tuple[float, float]]:
 
 
 class Guard:
-    def __init__(self, cfg: RiskCfg, state: State, conviction_min: float):
+    def __init__(self, cfg: RiskCfg, state: State, conviction_min: float,
+                 fees: FeeSchedule = HL_SCHEDULE):
         self.cfg = cfg
         self.state = state
         self.conviction_min = conviction_min
+        self.fees = fees
 
     def gate_open(self, a: OpenAction, equity: float, mark: float,
                   market_max_lev: float, day: str,
@@ -486,7 +488,7 @@ class Guard:
         # deciding whether a trade clears its costs could silently disagree with
         # the ledger booking them. peri.fees imports nothing and settles it.
         if self.cfg.tp_net_floor_usd > 0:
-            round_trip_fees = notional * round_trip_rate(resting)
+            round_trip_fees = notional * self.fees.round_trip_rate(resting)
             projected_net_tp = rr * risk_usd - round_trip_fees
             if projected_net_tp < self.cfg.tp_net_floor_usd:
                 return Refusal(

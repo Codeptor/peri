@@ -3,6 +3,7 @@ import time
 import pytest
 
 from peri.config import RiskCfg
+from peri.fees import ZERO
 from peri.models import OpenAction
 from peri.risk import Approved, Guard, Refusal
 from peri.state import State
@@ -820,3 +821,20 @@ def test_a_stop_exactly_at_the_floor_is_accepted(tmp_path):
     dist_pct = (90.0 - 88.2) / 90.0 * 100      # entry 90.0, stop 88.2 — exactly 2%
     assert dist_pct < 2.0                       # ...but not in binary: 1.999999999999997
     assert not (dist_pct < 2.0 - BOUNDARY_EPS)  # and the epsilon clears it
+
+
+def test_zero_fee_schedule_passes_what_hl_fees_refuse(tmp_path):
+    """The projected-net-TP floor must price the venue it gates for: a setup
+    whose edge is thinner than HL's 0.15% round trip still clears it on a
+    zero-fee venue."""
+    import dataclasses
+    g, _ = mk(tmp_path)
+    g.cfg = dataclasses.replace(CFG, tp_net_floor_usd=2.6, risk_pct=2.0)
+    # equity 67 -> risk 1.34; 2R -> gross 2.68; HL fees ~0.10 -> net ~2.58 < 2.6
+    v = g.gate_open(act(leverage=10), 67.0, MARK, 40, DAY,
+                    available_margin=50.0, reserved_order_markets=NO_RESERVED)
+    assert isinstance(v, Refusal) and "projected net TP" in v.reason
+    g.fees = ZERO
+    v = g.gate_open(act(leverage=10), 67.0, MARK, 40, DAY,
+                    available_margin=50.0, reserved_order_markets=NO_RESERVED)
+    assert isinstance(v, Approved)

@@ -13,8 +13,15 @@
 # places real orders with real money.
 
 mode = "dry"                        # dry | live. PERI_MODE in .env overrides this.
+venue = "hl"                        # hl | lighter. PERI_VENUE in .env overrides this.
 hl_network = "mainnet"              # info source; live orders only when mode="live"
 route_builder_fee = true            # trench builder fee (0.03%) on every live order
+
+[lighter]
+host = "https://mainnet.zklighter.elliot.ai"
+chain_id = 304                      # the SDK signs against this (mainnet)
+account_index = 0                   # set LIGHTER_ACCOUNT_INDEX in .env
+api_key_index = 4                   # trading key index; 0-3 are the web clients
 
 [telegram]
 group_id = 0                        # set TG_GROUP_ID in .env — the group to read

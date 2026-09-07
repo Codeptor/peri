@@ -143,3 +143,34 @@ def test_bad_mode_from_env_rejected(tmp_path):
     cfg_path, env_path = write(tmp_path, env="ANALYST_API_KEY=k\nPERI_MODE=yolo\n")
     with pytest.raises(ValueError):
         load_config(cfg_path, env_path)
+
+
+def test_venue_defaults_to_hl_without_a_lighter_section(tmp_path):
+    cfg_path, env_path = write(tmp_path)
+    cfg = load_config(cfg_path, env_path)
+    assert cfg.venue == "hl"
+    assert cfg.lighter.host == "https://mainnet.zklighter.elliot.ai"
+    assert cfg.lighter.chain_id == 304
+    assert cfg.lighter.api_key_index == 4
+
+
+def test_venue_lighter_reads_section_and_env(tmp_path):
+    toml = (TOML.replace('mode = "dry"', 'mode = "dry"\nvenue = "lighter"')
+            + '\n[lighter]\nhost = "https://example.invalid"\nchain_id = 999\napi_key_index = 7\n')
+    env = ("ANALYST_API_KEY=k\nANALYST_BASE_URL=https://api.example.com\nANALYST_MODEL=m\n"
+           "LIGHTER_ACCOUNT_INDEX=744352\nLIGHTER_API_KEY=secret\n")
+    cfg_path, env_path = write(tmp_path, toml=toml, env=env)
+    cfg = load_config(cfg_path, env_path)
+    assert cfg.venue == "lighter"
+    assert cfg.lighter.host == "https://example.invalid"
+    assert cfg.lighter.chain_id == 999
+    assert cfg.lighter.account_index == 744352
+    assert cfg.lighter.api_key_index == 7
+    assert cfg.lighter_api_key == "secret"
+
+
+def test_bad_venue_rejected(tmp_path):
+    cfg_path, env_path = write(
+        tmp_path, toml=TOML.replace('mode = "dry"', 'mode = "dry"\nvenue = "coinbase"'))
+    with pytest.raises(ValueError):
+        load_config(cfg_path, env_path)

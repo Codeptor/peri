@@ -12,8 +12,16 @@ cycle), and `market.close_fee_rate()` returned a third hardcoded value. Nothing
 bound them together, so the gate that decides whether a trade clears its costs
 could disagree with the ledger that books them.
 
+Lighter charges no maker or taker fee at the standard tier (verified against
+mainnet orderBookDetails 2026-09-07: taker_fee and maker_fee both "0.0000" on
+every market), so its schedule is ZERO. Anything that prices a trade takes a
+schedule; the module-level functions below are the HL schedule, kept so the
+default path reads exactly as before.
+
 `fees` imports nothing from peri, so every module can depend on it.
 """
+
+from dataclasses import dataclass
 
 HL_TAKER_RATE = 0.00045          # HL taker, one side
 HL_MAKER_RATE = 0.00015          # HL maker, one side
@@ -37,3 +45,22 @@ def round_trip_rate(resting_entry: bool) -> float:
     """Both sides. The exit is always a taker: a stop or take-profit is a
     triggered market order, and an analyst close crosses the spread."""
     return entry_rate(resting_entry) + TAKER_FEE_RATE
+
+
+@dataclass(frozen=True)
+class FeeSchedule:
+    """Both sides of what one venue charges. The guard and the engine take one
+    of these instead of reading the module constants, so a zero-fee venue
+    prices its trades at zero without a special case at every call site."""
+    taker_rate: float
+    maker_rate: float
+
+    def entry_rate(self, resting: bool) -> float:
+        return self.maker_rate if resting else self.taker_rate
+
+    def round_trip_rate(self, resting_entry: bool) -> float:
+        return self.entry_rate(resting_entry) + self.taker_rate
+
+
+HL_SCHEDULE = FeeSchedule(taker_rate=TAKER_FEE_RATE, maker_rate=MAKER_FEE_RATE)
+ZERO = FeeSchedule(taker_rate=0.0, maker_rate=0.0)   # Lighter standard tier
