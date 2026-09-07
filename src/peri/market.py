@@ -157,6 +157,41 @@ class Market:
             self._candle_cache[key] = (time.time(), out)
         return out
 
+    def candles_range(self, name: str, interval: str,
+                      start_ms: int, end_ms: int) -> list[dict]:
+        """Candles over an EXPLICIT window, chunked to the venue's limit.
+
+        `candles()` always reads backwards from now, which is right for a live
+        decision and wrong for replaying a trade that closed last week.
+        candleSnapshot returns at most 5000 bars per request, and 7 days of 1m
+        is 10,080, so a naive single call silently truncates the tail — the part
+        of the window a replay cares about most."""
+        span = {"1m": 60, "5m": 300, "15m": 900, "1h": 3600,
+                "4h": 14400, "1d": 86400}.get(interval, 60) * 1000
+        out: list[dict] = []
+        seen: set[int] = set()
+        cursor = int(start_ms)
+        end_ms = int(end_ms)
+        while cursor < end_ms:
+            stop = min(end_ms, cursor + 4500 * span)
+            res = self.post({"type": "candleSnapshot",
+                             "req": {"coin": name, "interval": interval,
+                                     "startTime": cursor, "endTime": stop}})
+            batch = res if isinstance(res, list) else []
+            if not batch:
+                break
+            for c in batch:
+                t = int(c["t"])
+                if t not in seen:
+                    seen.add(t)
+                    out.append(c)
+            latest = max(int(c["t"]) for c in batch)
+            if latest + span <= cursor:
+                break            # the venue is not advancing; stop rather than spin
+            cursor = latest + span
+        out.sort(key=lambda c: int(c["t"]))
+        return out
+
     def features(self, name: str, ctx: Ctx) -> dict:
         """The whole market picture the analyst gets for one candidate.
 
